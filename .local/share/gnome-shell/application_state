@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<application-state>
+  <context id="">
+    <application id="gkbd-keyboard-display.desktop" score="0" last-seen="1711959152"/>
+    <application id="org.gnome.Terminal.desktop" score="5442" last-seen="1712209529"/>
+    <application id="gnome-control-center.desktop" score="11" last-seen="1712018845"/>
+    <application id="firefox.desktop" score="1159" last-seen="1712210954"/>
+  </context>
+</application-state>

@@ -1,0 +1,19 @@
+---
+kind: Pod 
+apiVersion: v1 
+metadata: 
+  name: web-pod
+spec:   
+  volumes:
+  - name: html
+    hostPath:
+      path: /webdata #호스트 운영체제 웹데이터 경로의 볼륨을 html이름으로 만듬
+      # 이전에 인덱스 파일 미리 ssh 작업으로 넣어둠    
+  containers:
+  - name: web-container
+    image: nginx:1.14
+    ports:
+    - containerPort: 80 
+    volumeMounts:
+    - name:  html
+      mountPath:  /usr/share/nginx/html

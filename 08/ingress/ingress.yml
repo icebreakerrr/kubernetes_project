@@ -1,0 +1,24 @@
+# 인그레스 규칙 작성은 io페이지 참조하기
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepay-ingress 
+spec:
+  ingressClassName: nginx
+  rules:
+  - http: #http 요청
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: home-service
+            port:
+              number: 80 #홈서비스이름의 포트로 보냄
+      - path: /pay
+        pathType: Prefix
+        backend:
+          service:
+            name: pay-service
+            port:
+              number: 80 #페이서비스 이름의 포트로 보냄

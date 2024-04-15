@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: clusterip-service
+spec:  
+  # type: ClusterIP 
+  # clusterIP: 10.233.10.10 # 10.233.0.0/18 주어진 대역에 맞춰서 써야함
+    # 생략시 대역에 맞춰서 자동 할당
+  selector:
+    app: webui
+  ports:
+  - port: 80 #ip 포트
+    targetPort: 80 #파드 타겟 포트
+        

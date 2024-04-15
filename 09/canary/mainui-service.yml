@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mainui-svc
+spec:
+  selector:
+    app: mainui
+  ports:
+  - port: 80 #클러스터ip가 생략된 상태
+    protocol: TCP
+    targetPort: 80

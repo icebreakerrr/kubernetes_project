@@ -1,0 +1,13 @@
+kind: Service 
+apiVersion: v1
+metadata:
+  name: clusterip-service
+spec: #서비스 종류
+  type: ClusterIP
+  clusterIP: 10.233.10.10
+  selector: 
+    app: webui
+  #어떤 레이블로 보낼지
+  ports: 
+    - port: 80 # 서비스쪽 80 받으면
+      targetPort: 80 # 레이블쪽 80으로 로드밸런싱됨

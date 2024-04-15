@@ -1,0 +1,971 @@
+function
+qs(selector,context){return(context||document).querySelector(selector);}function
+qsl(selector,context){var
+els=qsa(selector,context);return els[els.length-1];}function
+qsa(selector,context){return(context||document).querySelectorAll(selector);}function
+partial(fn){var
+args=Array.apply(null,arguments).slice(1);return function(){return fn.apply(this,args);};}function
+partialArg(fn){var
+args=Array.apply(null,arguments);return function(arg){args[0]=arg;return fn.apply(this,args);};}function
+mixin(target,source){for(var
+key
+in
+source){target[key]=source[key];}}function
+alterClass(el,className,enable){if(el){el.className=el.className.replace(RegExp('(^|\\s)'+className+'(\\s|$)'),'$2')+(enable?' '+className:'');}}function
+toggle(id){var
+el=qs('#'+id);el.className=(el.className=='hidden'?'':'hidden');return false;}function
+cookie(assign,days){var
+date=new
+Date();date.setDate(date.getDate()+days);document.cookie=assign+'; expires='+date;}function
+verifyVersion(current,url,token){cookie('adminer_version=0',1);var
+iframe=document.createElement('iframe');iframe.src='https://www.adminer.org/version/?current='+current;iframe.frameBorder=0;iframe.marginHeight=0;iframe.scrolling='no';iframe.style.width='7ex';iframe.style.height='1.25em';if(window.postMessage&&window.addEventListener){iframe.style.display='none';addEventListener('message',function(event){if(event.origin=='https://www.adminer.org'){var
+match=/version=(.+)/.exec(event.data);if(match){cookie('adminer_version='+match[1],1);ajax(url+'script=version',function(){},event.data+'&token='+token);}}},false);}qs('#version').appendChild(iframe);}function
+selectValue(select){if(!select.selectedIndex){return select.value;}var
+selected=select.options[select.selectedIndex];return((selected.attributes.value||{}).specified?selected.value:selected.text);}function
+isTag(el,tag){var
+re=new
+RegExp('^('+tag+')$','i');return el&&re.test(el.tagName);}function
+parentTag(el,tag){while(el&&!isTag(el,tag)){el=el.parentNode;}return el;}function
+trCheck(el){var
+tr=parentTag(el,'tr');alterClass(tr,'checked',el.checked);if(el.form&&el.form['all']&&el.form['all'].onclick){el.form['all'].onclick();}}function
+selectCount(id,count){setHtml(id,(count===''?'':'('+(count+'').replace(/\B(?=(\d{3})+$)/g,thousandsSeparator)+')'));var
+el=qs('#'+id);if(el){var
+inputs=qsa('input',el.parentNode.parentNode);for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];if(input.type=='submit'){input.disabled=(count=='0');}}}}function
+formCheck(name){var
+elems=this.form.elements;for(var
+i=0;i<elems.length;i++){if(name.test(elems[i].name)){elems[i].checked=this.checked;trCheck(elems[i]);}}}function
+tableCheck(){var
+inputs=qsa('table.checkable td:first-child input');for(var
+i=0;i<inputs.length;i++){trCheck(inputs[i]);}}function
+formUncheck(id){var
+el=qs('#'+id);el.checked=false;trCheck(el);}function
+formChecked(el,name){var
+checked=0;var
+elems=el.form.elements;for(var
+i=0;i<elems.length;i++){if(name.test(elems[i].name)&&elems[i].checked){checked++;}}return checked;}function
+tableClick(event,click){var
+td=parentTag(getTarget(event),'td');var
+text;if(td&&(text=td.getAttribute('data-text'))){if(selectClick.call(td,event,+text,td.getAttribute('data-warning'))){return;}}click=(click||!window.getSelection||getSelection().isCollapsed);var
+el=getTarget(event);while(!isTag(el,'tr')){if(isTag(el,'table|a|input|textarea')){if(el.type!='checkbox'){return;}checkboxClick.call(el,event);click=false;}el=el.parentNode;if(!el){return;}}el=el.firstChild.firstChild;if(click){el.checked=!el.checked;el.onclick&&el.onclick();}if(el.name=='check[]'){el.form['all'].checked=false;formUncheck('all-page');}if(/^(tables|views)\[\]$/.test(el.name)){formUncheck('check-all');}trCheck(el);}var
+lastChecked;function
+checkboxClick(event){if(!this.name){return;}if(event.shiftKey&&(!lastChecked||lastChecked.name==this.name)){var
+checked=(lastChecked?lastChecked.checked:true);var
+inputs=qsa('input',parentTag(this,'table'));var
+checking=!lastChecked;for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];if(input.name===this.name){if(checking){input.checked=checked;trCheck(input);}if(input===this||input===lastChecked){if(checking){break;}checking=true;}}}}else{lastChecked=this;}}function
+setHtml(id,html){var
+el=qs('[id="'+id.replace(/[\\"]/g,'\\$&')+'"]');if(el){if(html==null){el.parentNode.innerHTML='';}else{el.innerHTML=html;}}}function
+nodePosition(el){var
+pos=0;while(el=el.previousSibling){pos++;}return pos;}function
+pageClick(href,page){if(!isNaN(page)&&page){location.href=href+(page!=1?'&page='+(page-1):'');}}function
+menuOver(event){var
+a=getTarget(event);if(isTag(a,'a|span')&&a.offsetLeft+a.offsetWidth>a.parentNode.offsetWidth-15){this.style.overflow='visible';}}function
+menuOut(){this.style.overflow='auto';}function
+selectAddRow(){var
+field=this;var
+row=cloneNode(field.parentNode);field.onchange=selectFieldChange;field.onchange();var
+selects=qsa('select',row);for(var
+i=0;i<selects.length;i++){selects[i].name=selects[i].name.replace(/[a-z]\[\d+/,'$&1');selects[i].selectedIndex=0;}var
+inputs=qsa('input',row);for(var
+i=0;i<inputs.length;i++){inputs[i].name=inputs[i].name.replace(/[a-z]\[\d+/,'$&1');inputs[i].className='';if(inputs[i].type=='checkbox'){inputs[i].checked=false;}else{inputs[i].value='';}}field.parentNode.parentNode.appendChild(row);}function
+selectSearchKeydown(event){if(event.keyCode==13||event.keyCode==10){this.onsearch=function(){};}}function
+selectSearchSearch(){if(!this.value){this.parentNode.firstChild.selectedIndex=0;}}function
+columnMouse(className){var
+spans=qsa('span',this);for(var
+i=0;i<spans.length;i++){if(/column/.test(spans[i].className)){spans[i].className='column'+(className||'');}}}function
+selectSearch(name){var
+el=qs('#fieldset-search');el.className='';var
+divs=qsa('div',el);for(var
+i=0;i<divs.length;i++){var
+div=divs[i];var
+el=qs('[name$="[col]"]',div);if(el&&selectValue(el)==name){break;}}if(i==divs.length){div.firstChild.value=name;div.firstChild.onchange();}qs('[name$="[val]"]',div).focus();return false;}function
+isCtrl(event){return(event.ctrlKey||event.metaKey)&&!event.altKey;}function
+getTarget(event){return event.target||event.srcElement;}function
+bodyKeydown(event,button){eventStop(event);var
+target=getTarget(event);if(target.jushTextarea){target=target.jushTextarea;}if(isCtrl(event)&&(event.keyCode==13||event.keyCode==10)&&isTag(target,'select|textarea|input')){target.blur();if(button){target.form[button].click();}else{if(target.form.onsubmit){target.form.onsubmit();}target.form.submit();}target.focus();return false;}return true;}function
+bodyClick(event){var
+target=getTarget(event);if((isCtrl(event)||event.shiftKey)&&target.type=='submit'&&isTag(target,'input')){target.form.target='_blank';setTimeout(function(){target.form.target='';},0);}}function
+editingKeydown(event){if((event.keyCode==40||event.keyCode==38)&&isCtrl(event)){var
+target=getTarget(event);var
+sibling=(event.keyCode==40?'nextSibling':'previousSibling');var
+el=target.parentNode.parentNode[sibling];if(el&&(isTag(el,'tr')||(el=el[sibling]))&&isTag(el,'tr')&&(el=el.childNodes[nodePosition(target.parentNode)])&&(el=el.childNodes[nodePosition(target)])){el.focus();}return false;}if(event.shiftKey&&!bodyKeydown(event,'insert')){return false;}return true;}function
+functionChange(){var
+input=this.form[this.name.replace(/^function/,'fields')];if(input){if(selectValue(this)){if(input.origType===undefined){input.origType=input.type;input.origMaxLength=input.getAttribute('data-maxlength');}input.removeAttribute('data-maxlength');input.type='text';}else
+if(input.origType){input.type=input.origType;if(input.origMaxLength>=0){input.setAttribute('data-maxlength',input.origMaxLength);}}oninput({target:input});}helpClose();}function
+skipOriginal(first){var
+fnSelect=this.previousSibling.firstChild;if(fnSelect.selectedIndex<first){fnSelect.selectedIndex=first;}}function
+fieldChange(){var
+row=cloneNode(parentTag(this,'tr'));var
+inputs=qsa('input',row);for(var
+i=0;i<inputs.length;i++){inputs[i].value='';}parentTag(this,'table').appendChild(row);this.oninput=function(){};}function
+ajax(url,callback,data,message){var
+request=(window.XMLHttpRequest?new
+XMLHttpRequest():(window.ActiveXObject?new
+ActiveXObject('Microsoft.XMLHTTP'):false));if(request){var
+ajaxStatus=qs('#ajaxstatus');if(message){ajaxStatus.innerHTML='<div class="message">'+message+'</div>';ajaxStatus.className=ajaxStatus.className.replace(/ hidden/g,'');}else{ajaxStatus.className+=' hidden';}request.open((data?'POST':'GET'),url);if(data){request.setRequestHeader('Content-Type','application/x-www-form-urlencoded');}request.setRequestHeader('X-Requested-With','XMLHttpRequest');request.onreadystatechange=function(){if(request.readyState==4){if(/^2/.test(request.status)){callback(request);}else{ajaxStatus.innerHTML=(request.status?request.responseText:'<div class="error">'+offlineMessage+'</div>');ajaxStatus.className=ajaxStatus.className.replace(/ hidden/g,'');}}};request.send(data);}return request;}function
+ajaxSetHtml(url){return!ajax(url,function(request){var
+data=window.JSON?JSON.parse(request.responseText):eval('('+request.responseText+')');for(var
+key
+in
+data){setHtml(key,data[key]);}});}function
+ajaxForm(form,message,button){var
+data=[];var
+els=form.elements;for(var
+i=0;i<els.length;i++){var
+el=els[i];if(el.name&&!el.disabled){if(/^file$/i.test(el.type)&&el.value){return false;}if(!/^(checkbox|radio|submit|file)$/i.test(el.type)||el.checked||el==button){data.push(encodeURIComponent(el.name)+'='+encodeURIComponent(isTag(el,'select')?selectValue(el):el.value));}}}data=data.join('&');var
+url=form.action;if(!/post/i.test(form.method)){url=url.replace(/\?.*/,'')+'?'+data;data='';}return ajax(url,function(request){setHtml('ajaxstatus',request.responseText);if(window.jush){jush.highlight_tag(qsa('code',qs('#ajaxstatus')),0);}messagesPrint(qs('#ajaxstatus'));},data,message);}function
+selectClick(event,text,warning){var
+td=this;var
+target=getTarget(event);if(!isCtrl(event)||isTag(td.firstChild,'input|textarea')||isTag(target,'a')){return;}if(warning){alert(warning);return true;}var
+original=td.innerHTML;text=text||/\n/.test(original);var
+input=document.createElement(text?'textarea':'input');input.onkeydown=function(event){if(!event){event=window.event;}if(event.keyCode==27&&!event.shiftKey&&!event.altKey&&!isCtrl(event)){inputBlur.apply(input);td.innerHTML=original;}};var
+pos=event.rangeOffset;var
+value=(td.firstChild&&td.firstChild.alt)||td.textContent||td.innerText;input.style.width=Math.max(td.clientWidth-14,20)+'px';if(text){var
+rows=1;value.replace(/\n/g,function(){rows++;});input.rows=rows;}if(qsa('i',td).length){value='';}if(document.selection){var
+range=document.selection.createRange();range.moveToPoint(event.clientX,event.clientY);var
+range2=range.duplicate();range2.moveToElementText(td);range2.setEndPoint('EndToEnd',range);pos=range2.text.length;}td.innerHTML='';td.appendChild(input);setupSubmitHighlight(td);input.focus();if(text==2){return ajax(location.href+'&'+encodeURIComponent(td.id)+'=',function(request){if(request.responseText){input.value=request.responseText;input.name=td.id;}});}input.value=value;input.name=td.id;input.selectionStart=pos;input.selectionEnd=pos;if(document.selection){var
+range=document.selection.createRange();range.moveEnd('character',-input.value.length+pos);range.select();}return true;}function
+selectLoadMore(limit,loading){var
+a=this;var
+title=a.innerHTML;var
+href=a.href;a.innerHTML=loading;if(href){a.removeAttribute('href');return!ajax(href,function(request){var
+tbody=document.createElement('tbody');tbody.innerHTML=request.responseText;qs('#table').appendChild(tbody);if(tbody.children.length<limit){a.parentNode.removeChild(a);}else{a.href=href.replace(/\d+$/,function(page){return+page+1;});a.innerHTML=title;}});}}function
+eventStop(event){if(event.stopPropagation){event.stopPropagation();}else{event.cancelBubble=true;}}function
+setupSubmitHighlight(parent){for(var
+key
+in{input:1,select:1,textarea:1}){var
+inputs=qsa(key,parent);for(var
+i=0;i<inputs.length;i++){setupSubmitHighlightInput(inputs[i])}}}function
+setupSubmitHighlightInput(input){if(!/submit|image|file/.test(input.type)){addEvent(input,'focus',inputFocus);addEvent(input,'blur',inputBlur);}}function
+inputFocus(){var
+submit=findDefaultSubmit(this);if(submit){alterClass(submit,'default',true);}}function
+inputBlur(){var
+submit=findDefaultSubmit(this);if(submit){alterClass(submit,'default');}}function
+findDefaultSubmit(el){if(el.jushTextarea){el=el.jushTextarea;}if(!el.form){return null;}var
+inputs=qsa('input',el.form);for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];if(input.type=='submit'&&!input.style.zIndex){return input;}}}function
+addEvent(el,action,handler){if(el.addEventListener){el.addEventListener(action,handler,false);}else{el.attachEvent('on'+action,handler);}}function
+focus(el){setTimeout(function(){el.focus();},0);}function
+cloneNode(el){var
+el2=el.cloneNode(true);var
+selector='input, select';var
+origEls=qsa(selector,el);var
+cloneEls=qsa(selector,el2);for(var
+i=0;i<origEls.length;i++){var
+origEl=origEls[i];for(var
+key
+in
+origEl){if(/^on/.test(key)&&origEl[key]){cloneEls[i][key]=origEl[key];}}}setupSubmitHighlight(el2);return el2;}oninput=function(event){var
+target=event.target;var
+maxLength=target.getAttribute('data-maxlength');alterClass(target,'maxlength',target.value&&maxLength!=null&&target.value.length>maxLength);};function
+bodyLoad(version,maria){if(window.jush){jush.create_links=' target="_blank" rel="noreferrer noopener"';if(version){for(var
+key
+in
+jush.urls){var
+obj=jush.urls;if(typeof
+obj[key]!='string'){obj=obj[key];key=0;if(maria){for(var
+i=1;i<obj.length;i++){obj[i]=obj[i].replace(/\.html/,'/').replace(/-type-syntax/,'-data-types').replace(/numeric-(data-types)/,'$1-$&').replace(/#statvar_.*/,'#$$1');}}}obj[key]=(maria?obj[key].replace(/dev\.mysql\.com\/doc\/mysql\/en\//,'mariadb.com/kb/en/library/'):obj[key]).replace(/\/doc\/mysql/,'/doc/refman/'+version).replace(/\/docs\/current/,'/docs/'+version);}}if(window.jushLinks){jush.custom_links=jushLinks;}jush.highlight_tag('code',0);var
+tags=qsa('textarea');for(var
+i=0;i<tags.length;i++){if(/(^|\s)jush-/.test(tags[i].className)){var
+pre=jush.textarea(tags[i]);if(pre){setupSubmitHighlightInput(pre);}}}}}function
+formField(form,name){for(var
+i=0;i<form.length;i++){if(form[i].name==name){return form[i];}}}function
+typePassword(el,disable){try{el.type=(disable?'text':'password');}catch(e){}}function
+messagesPrint(el){var
+els=qsa('.toggle',el);for(var
+i=0;i<els.length;i++){els[i].onclick=partial(toggle,els[i].getAttribute('href').substr(1));}}function
+loginDriver(driver){var
+trs=parentTag(driver,'table').rows;var
+disabled=/sqlite/.test(selectValue(driver));alterClass(trs[1],'hidden',disabled);trs[1].getElementsByTagName('input')[0].disabled=disabled;}var
+dbCtrl;var
+dbPrevious={};function
+dbMouseDown(event){dbCtrl=isCtrl(event);if(dbPrevious[this.name]==undefined){dbPrevious[this.name]=this.value;}}function
+dbChange(){if(dbCtrl){this.form.target='_blank';}this.form.submit();this.form.target='';if(dbCtrl&&dbPrevious[this.name]!=undefined){this.value=dbPrevious[this.name];dbPrevious[this.name]=undefined;}}function
+selectFieldChange(){var
+form=this.form;var
+ok=(function(){var
+inputs=qsa('input',form);for(var
+i=0;i<inputs.length;i++){if(inputs[i].value&&/^fulltext/.test(inputs[i].name)){return true;}}var
+ok=form.limit.value;var
+selects=qsa('select',form);var
+group=false;var
+columns={};for(var
+i=0;i<selects.length;i++){var
+select=selects[i];var
+col=selectValue(select);var
+match=/^(where.+)col\]/.exec(select.name);if(match){var
+op=selectValue(form[match[1]+'op]']);var
+val=form[match[1]+'val]'].value;if(col
+in
+indexColumns&&(!/LIKE|REGEXP/.test(op)||(op=='LIKE'&&val.charAt(0)!='%'))){return true;}else
+if(col||val){ok=false;}}if((match=/^(columns.+)fun\]/.exec(select.name))){if(/^(avg|count|count distinct|group_concat|max|min|sum)$/.test(col)){group=true;}var
+val=selectValue(form[match[1]+'col]']);if(val){columns[col&&col!='count'?'':val]=1;}}if(col&&/^order/.test(select.name)){if(!(col
+in
+indexColumns)){ok=false;}break;}}if(group){for(var
+col
+in
+columns){if(!(col
+in
+indexColumns)){ok=false;}}}return ok;})();setHtml('noindex',(ok?'':'!'));}var
+added='.',rowCount;function
+delimiterEqual(val,a,b){return(val==a+'_'+b||val==a+b||val==a+b.charAt(0).toUpperCase()+b.substr(1));}function
+idfEscape(s){return s.replace(/`/,'``');}function
+editFields(){var
+els=qsa('[name$="[field]"]');for(var
+i=0;i<els.length;i++){els[i].oninput=function(){editingNameChange.call(this);if(!this.defaultValue){editingAddRow.call(this);}}}els=qsa('[name$="[length]"]');for(var
+i=0;i<els.length;i++){mixin(els[i],{onfocus:editingLengthFocus,oninput:editingLengthChange});}els=qsa('[name$="[type]"]');for(var
+i=0;i<els.length;i++){mixin(els[i],{onfocus:function(){lastType=selectValue(this);},onchange:editingTypeChange,onmouseover:function(event){helpMouseover.call(this,event,getTarget(event).value,1)},onmouseout:helpMouseout});}}function
+editingClick(event){var
+el=getTarget(event);if(!isTag(el,'input')){el=parentTag(el,'label');el=el&&qs('input',el);}if(el){var
+name=el.name;if(/^add\[/.test(name)){editingAddRow.call(el,1);}else
+if(/^up\[/.test(name)){editingMoveRow.call(el,1);}else
+if(/^down\[/.test(name)){editingMoveRow.call(el);}else
+if(/^drop_col\[/.test(name)){editingRemoveRow.call(el,'fields\$1[field]');}else{if(name=='auto_increment_col'){var
+field=el.form['fields['+el.value+'][field]'];if(!field.value){field.value='id';field.oninput();}}return;}return false;}}function
+editingInput(event){var
+el=getTarget(event);if(/\[default\]$/.test(el.name)){el.previousSibling.checked=true;}}function
+editingNameChange(){var
+name=this.name.substr(0,this.name.length-7);var
+type=formField(this.form,name+'[type]');var
+opts=type.options;var
+candidate;var
+val=this.value;for(var
+i=opts.length;i--;){var
+match=/(.+)`(.+)/.exec(opts[i].value);if(!match){if(candidate&&i==opts.length-2&&val==opts[candidate].value.replace(/.+`/,'')&&name=='fields[1]'){return;}break;}var
+table=match[1];var
+column=match[2];var
+tables=[table,table.replace(/s$/,''),table.replace(/es$/,'')];for(var
+j=0;j<tables.length;j++){table=tables[j];if(val==column||val==table||delimiterEqual(val,table,column)||delimiterEqual(val,column,table)){if(candidate){return;}candidate=i;break;}}}if(candidate){type.selectedIndex=candidate;type.onchange();}}function
+editingAddRow(focus){var
+match=/(\d+)(\.\d+)?/.exec(this.name);var
+x=match[0]+(match[2]?added.substr(match[2].length):added)+'1';var
+row=parentTag(this,'tr');var
+row2=cloneNode(row);var
+tags=qsa('select',row);var
+tags2=qsa('select',row2);for(var
+i=0;i<tags.length;i++){tags2[i].name=tags[i].name.replace(/[0-9.]+/,x);tags2[i].selectedIndex=tags[i].selectedIndex;}tags=qsa('input',row);tags2=qsa('input',row2);var
+input=tags2[0];for(var
+i=0;i<tags.length;i++){if(tags[i].name=='auto_increment_col'){tags2[i].value=x;tags2[i].checked=false;}tags2[i].name=tags[i].name.replace(/([0-9.]+)/,x);if(/\[(orig|field|comment|default)/.test(tags[i].name)){tags2[i].value='';}if(/\[(has_default)/.test(tags[i].name)){tags2[i].checked=false;}}tags[0].oninput=editingNameChange;row.parentNode.insertBefore(row2,row.nextSibling);if(focus){input.oninput=editingNameChange;input.focus();}added+='0';rowCount++;return false;}function
+editingRemoveRow(name){var
+field=formField(this.form,this.name.replace(/[^\[]+(.+)/,name));field.parentNode.removeChild(field);parentTag(this,'tr').style.display='none';return false;}function
+editingMoveRow(up){var
+row=parentTag(this,'tr');if(!('nextElementSibling'in
+row)){return true;}row.parentNode.insertBefore(row,up?row.previousElementSibling:row.nextElementSibling?row.nextElementSibling.nextElementSibling:row.parentNode.firstChild);return false;}var
+lastType='';function
+editingTypeChange(){var
+type=this;var
+name=type.name.substr(0,type.name.length-6);var
+text=selectValue(type);for(var
+i=0;i<type.form.elements.length;i++){var
+el=type.form.elements[i];if(el.name==name+'[length]'){if(!((/(char|binary)$/.test(lastType)&&/(char|binary)$/.test(text))||(/(enum|set)$/.test(lastType)&&/(enum|set)$/.test(text)))){el.value='';}el.oninput.apply(el);}if(lastType=='timestamp'&&el.name==name+'[has_default]'&&/timestamp/i.test(formField(type.form,name+'[default]').value)){el.checked=false;}if(el.name==name+'[collation]'){alterClass(el,'hidden',!/(char|text|enum|set)$/.test(text));}if(el.name==name+'[unsigned]'){alterClass(el,'hidden',!/(^|[^o])int(?!er)|numeric|real|float|double|decimal|money/.test(text));}if(el.name==name+'[on_update]'){alterClass(el,'hidden',!/timestamp|datetime/.test(text));}if(el.name==name+'[on_delete]'){alterClass(el,'hidden',!/`/.test(text));}}helpClose();}function
+editingLengthChange(){alterClass(this,'required',!this.value.length&&/var(char|binary)$/.test(selectValue(this.parentNode.previousSibling.firstChild)));}function
+editingLengthFocus(){var
+td=this.parentNode;if(/(enum|set)$/.test(selectValue(td.previousSibling.firstChild))){var
+edit=qs('#enum-edit');edit.value=enumValues(this.value);td.appendChild(edit);this.style.display='none';edit.style.display='inline';edit.focus();}}function
+enumValues(s){var
+re=/(^|,)\s*'(([^\\']|\\.|'')*)'\s*/g;var
+result=[];var
+offset=0;var
+match;while(match=re.exec(s)){if(offset!=match.index){break;}result.push(match[2].replace(/'(')|\\(.)/g,'$1$2'));offset+=match[0].length;}return(offset==s.length?result.join('\n'):s);}function
+editingLengthBlur(){var
+field=this.parentNode.firstChild;var
+val=this.value;field.value=(/^'[^\n]+'$/.test(val)?val:val&&"'"+val.replace(/\n+$/,'').replace(/'/g,"''").replace(/\\/g,'\\\\').replace(/\n/g,"','")+"'");field.style.display='inline';this.style.display='none';}function
+columnShow(checked,column){var
+trs=qsa('tr',qs('#edit-fields'));for(var
+i=0;i<trs.length;i++){alterClass(qsa('td',trs[i])[column],'hidden',!checked);}}function
+partitionByChange(){var
+partitionTable=/RANGE|LIST/.test(selectValue(this));alterClass(this.form['partitions'],'hidden',partitionTable||!this.selectedIndex);alterClass(qs('#partition-table'),'hidden',!partitionTable);helpClose();}function
+partitionNameChange(){var
+row=cloneNode(parentTag(this,'tr'));row.firstChild.firstChild.value='';parentTag(this,'table').appendChild(row);this.oninput=function(){};}function
+editingCommentsClick(el,focus){var
+comment=el.form['Comment'];columnShow(el.checked,6);alterClass(comment,'hidden',!el.checked);if(focus&&el.checked){comment.focus();}}function
+dumpClick(event){var
+el=parentTag(getTarget(event),'label');if(el){el=qs('input',el);var
+match=/(.+)\[\]$/.exec(el.name);if(match){checkboxClick.call(el,event);formUncheck('check-'+match[1]);}}}function
+foreignAddRow(){var
+row=cloneNode(parentTag(this,'tr'));this.onchange=function(){};var
+selects=qsa('select',row);for(var
+i=0;i<selects.length;i++){selects[i].name=selects[i].name.replace(/\]/,'1$&');selects[i].selectedIndex=0;}parentTag(this,'table').appendChild(row);}function
+indexesAddRow(){var
+row=cloneNode(parentTag(this,'tr'));this.onchange=function(){};var
+selects=qsa('select',row);for(var
+i=0;i<selects.length;i++){selects[i].name=selects[i].name.replace(/indexes\[\d+/,'$&1');selects[i].selectedIndex=0;}var
+inputs=qsa('input',row);for(var
+i=0;i<inputs.length;i++){inputs[i].name=inputs[i].name.replace(/indexes\[\d+/,'$&1');inputs[i].value='';}parentTag(this,'table').appendChild(row);}function
+indexesChangeColumn(prefix){var
+names=[];for(var
+tag
+in{'select':1,'input':1}){var
+columns=qsa(tag,parentTag(this,'td'));for(var
+i=0;i<columns.length;i++){if(/\[columns\]/.test(columns[i].name)){var
+value=selectValue(columns[i]);if(value){names.push(value);}}}}this.form[this.name.replace(/\].*/,'][name]')].value=prefix+names.join('_');}function
+indexesAddColumn(prefix){var
+field=this;var
+select=field.form[field.name.replace(/\].*/,'][type]')];if(!select.selectedIndex){while(selectValue(select)!="INDEX"&&select.selectedIndex<select.options.length){select.selectedIndex++;}select.onchange();}var
+column=cloneNode(field.parentNode);var
+selects=qsa('select',column);for(var
+i=0;i<selects.length;i++){select=selects[i];select.name=select.name.replace(/\]\[\d+/,'$&1');select.selectedIndex=0;}field.onchange=partial(indexesChangeColumn,prefix);var
+inputs=qsa('input',column);for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];input.name=input.name.replace(/\]\[\d+/,'$&1');if(input.type!='checkbox'){input.value='';}}parentTag(field,'td').appendChild(column);field.onchange();}function
+sqlSubmit(form,root){if(encodeURIComponent(form['query'].value).length<2e3){form.action=root+'&sql='+encodeURIComponent(form['query'].value)+(form['limit'].value?'&limit='+
++form['limit'].value:'')+(form['error_stops'].checked?'&error_stops=1':'')+(form['only_errors'].checked?'&only_errors=1':'');}}function
+triggerChange(tableRe,table,form){var
+formEvent=selectValue(form['Event']);if(tableRe.test(form['Trigger'].value)){form['Trigger'].value=table+'_'+(selectValue(form['Timing']).charAt(0)+formEvent.charAt(0)).toLowerCase();}alterClass(form['Of'],'hidden',!/ OF/.test(formEvent));}var
+that,x,y;function
+schemaMousedown(event){if((event.which?event.which:event.button)==1){that=this;x=event.clientX-this.offsetLeft;y=event.clientY-this.offsetTop;}}function
+schemaMousemove(event){if(that!==undefined){var
+left=(event.clientX-x)/em;var
+top=(event.clientY-y)/em;var
+divs=qsa('div',that);var
+lineSet={};for(var
+i=0;i<divs.length;i++){if(divs[i].className=='references'){var
+div2=qs('[id="'+(/^refs/.test(divs[i].id)?'refd':'refs')+divs[i].id.substr(4)+'"]');var
+ref=(tablePos[divs[i].title]?tablePos[divs[i].title]:[div2.parentNode.offsetTop/em,0]);var
+left1=-1;var
+id=divs[i].id.replace(/^ref.(.+)-.+/,'$1');if(divs[i].parentNode!=div2.parentNode){left1=Math.min(0,ref[1]-left)-1;divs[i].style.left=left1+'em';divs[i].querySelector('div').style.width=-left1+'em';var
+left2=Math.min(0,left-ref[1])-1;div2.style.left=left2+'em';div2.querySelector('div').style.width=-left2+'em';}if(!lineSet[id]){var
+line=qs('[id="'+divs[i].id.replace(/^....(.+)-.+$/,'refl$1')+'"]');var
+top1=top+divs[i].offsetTop/em;var
+top2=top+div2.offsetTop/em;if(divs[i].parentNode!=div2.parentNode){top2+=ref[0]-top;line.querySelector('div').style.height=Math.abs(top1-top2)+'em';}line.style.left=(left+left1)+'em';line.style.top=Math.min(top1,top2)+'em';lineSet[id]=true;}}}that.style.left=left+'em';that.style.top=top+'em';}}function
+schemaMouseup(event,db){if(that!==undefined){tablePos[that.firstChild.firstChild.firstChild.data]=[(event.clientY-y)/em,(event.clientX-x)/em];that=undefined;var
+s='';for(var
+key
+in
+tablePos){s+='_'+key+':'+Math.round(tablePos[key][0]*10000)/10000+'x'+Math.round(tablePos[key][1]*10000)/10000;}s=encodeURIComponent(s.substr(1));var
+link=qs('#schema-link');link.href=link.href.replace(/[^=]+$/,'')+s;cookie('adminer_schema-'+db+'='+s,30);}}var
+helpOpen,helpIgnore;function
+helpMouseover(event,text,side){var
+target=getTarget(event);if(!text){helpClose();}else
+if(window.jush&&(!helpIgnore||this!=target)){helpOpen=1;var
+help=qs('#help');help.innerHTML=text;jush.highlight_tag([help]);alterClass(help,'hidden');var
+rect=target.getBoundingClientRect();var
+body=document.documentElement;help.style.top=(body.scrollTop+rect.top-(side?(help.offsetHeight-target.offsetHeight)/2:help.offsetHeight))+'px';help.style.left=(body.scrollLeft+rect.left-(side?help.offsetWidth:(help.offsetWidth-target.offsetWidth)/2))+'px';}}function
+helpMouseout(event){helpOpen=0;helpIgnore=(this!=getTarget(event));setTimeout(function(){if(!helpOpen){helpClose();}},200);}function
+helpClose(){alterClass(qs('#help'),'hidden',true);}        »y x ˇˇ     20230804095237-8l9   http://10.233.13.38:8080/?file=functions.js&version=4.8.1   úk  function
+qs(selector,context){return(context||document).querySelector(selector);}function
+qsl(selector,context){var
+els=qsa(selector,context);return els[els.length-1];}function
+qsa(selector,context){return(context||document).querySelectorAll(selector);}function
+partial(fn){var
+args=Array.apply(null,arguments).slice(1);return function(){return fn.apply(this,args);};}function
+partialArg(fn){var
+args=Array.apply(null,arguments);return function(arg){args[0]=arg;return fn.apply(this,args);};}function
+mixin(target,source){for(var
+key
+in
+source){target[key]=source[key];}}function
+alterClass(el,className,enable){if(el){el.className=el.className.replace(RegExp('(^|\\s)'+className+'(\\s|$)'),'$2')+(enable?' '+className:'');}}function
+toggle(id){var
+el=qs('#'+id);el.className=(el.className=='hidden'?'':'hidden');return false;}function
+cookie(assign,days){var
+date=new
+Date();date.setDate(date.getDate()+days);document.cookie=assign+'; expires='+date;}function
+verifyVersion(current,url,token){cookie('adminer_version=0',1);var
+iframe=document.createElement('iframe');iframe.src='https://www.adminer.org/version/?current='+current;iframe.frameBorder=0;iframe.marginHeight=0;iframe.scrolling='no';iframe.style.width='7ex';iframe.style.height='1.25em';if(window.postMessage&&window.addEventListener){iframe.style.display='none';addEventListener('message',function(event){if(event.origin=='https://www.adminer.org'){var
+match=/version=(.+)/.exec(event.data);if(match){cookie('adminer_version='+match[1],1);ajax(url+'script=version',function(){},event.data+'&token='+token);}}},false);}qs('#version').appendChild(iframe);}function
+selectValue(select){if(!select.selectedIndex){return select.value;}var
+selected=select.options[select.selectedIndex];return((selected.attributes.value||{}).specified?selected.value:selected.text);}function
+isTag(el,tag){var
+re=new
+RegExp('^('+tag+')$','i');return el&&re.test(el.tagName);}function
+parentTag(el,tag){while(el&&!isTag(el,tag)){el=el.parentNode;}return el;}function
+trCheck(el){var
+tr=parentTag(el,'tr');alterClass(tr,'checked',el.checked);if(el.form&&el.form['all']&&el.form['all'].onclick){el.form['all'].onclick();}}function
+selectCount(id,count){setHtml(id,(count===''?'':'('+(count+'').replace(/\B(?=(\d{3})+$)/g,thousandsSeparator)+')'));var
+el=qs('#'+id);if(el){var
+inputs=qsa('input',el.parentNode.parentNode);for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];if(input.type=='submit'){input.disabled=(count=='0');}}}}function
+formCheck(name){var
+elems=this.form.elements;for(var
+i=0;i<elems.length;i++){if(name.test(elems[i].name)){elems[i].checked=this.checked;trCheck(elems[i]);}}}function
+tableCheck(){var
+inputs=qsa('table.checkable td:first-child input');for(var
+i=0;i<inputs.length;i++){trCheck(inputs[i]);}}function
+formUncheck(id){var
+el=qs('#'+id);el.checked=false;trCheck(el);}function
+formChecked(el,name){var
+checked=0;var
+elems=el.form.elements;for(var
+i=0;i<elems.length;i++){if(name.test(elems[i].name)&&elems[i].checked){checked++;}}return checked;}function
+tableClick(event,click){var
+td=parentTag(getTarget(event),'td');var
+text;if(td&&(text=td.getAttribute('data-text'))){if(selectClick.call(td,event,+text,td.getAttribute('data-warning'))){return;}}click=(click||!window.getSelection||getSelection().isCollapsed);var
+el=getTarget(event);while(!isTag(el,'tr')){if(isTag(el,'table|a|input|textarea')){if(el.type!='checkbox'){return;}checkboxClick.call(el,event);click=false;}el=el.parentNode;if(!el){return;}}el=el.firstChild.firstChild;if(click){el.checked=!el.checked;el.onclick&&el.onclick();}if(el.name=='check[]'){el.form['all'].checked=false;formUncheck('all-page');}if(/^(tables|views)\[\]$/.test(el.name)){formUncheck('check-all');}trCheck(el);}var
+lastChecked;function
+checkboxClick(event){if(!this.name){return;}if(event.shiftKey&&(!lastChecked||lastChecked.name==this.name)){var
+checked=(lastChecked?lastChecked.checked:true);var
+inputs=qsa('input',parentTag(this,'table'));var
+checking=!lastChecked;for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];if(input.name===this.name){if(checking){input.checked=checked;trCheck(input);}if(input===this||input===lastChecked){if(checking){break;}checking=true;}}}}else{lastChecked=this;}}function
+setHtml(id,html){var
+el=qs('[id="'+id.replace(/[\\"]/g,'\\$&')+'"]');if(el){if(html==null){el.parentNode.innerHTML='';}else{el.innerHTML=html;}}}function
+nodePosition(el){var
+pos=0;while(el=el.previousSibling){pos++;}return pos;}function
+pageClick(href,page){if(!isNaN(page)&&page){location.href=href+(page!=1?'&page='+(page-1):'');}}function
+menuOver(event){var
+a=getTarget(event);if(isTag(a,'a|span')&&a.offsetLeft+a.offsetWidth>a.parentNode.offsetWidth-15){this.style.overflow='visible';}}function
+menuOut(){this.style.overflow='auto';}function
+selectAddRow(){var
+field=this;var
+row=cloneNode(field.parentNode);field.onchange=selectFieldChange;field.onchange();var
+selects=qsa('select',row);for(var
+i=0;i<selects.length;i++){selects[i].name=selects[i].name.replace(/[a-z]\[\d+/,'$&1');selects[i].selectedIndex=0;}var
+inputs=qsa('input',row);for(var
+i=0;i<inputs.length;i++){inputs[i].name=inputs[i].name.replace(/[a-z]\[\d+/,'$&1');inputs[i].className='';if(inputs[i].type=='checkbox'){inputs[i].checked=false;}else{inputs[i].value='';}}field.parentNode.parentNode.appendChild(row);}function
+selectSearchKeydown(event){if(event.keyCode==13||event.keyCode==10){this.onsearch=function(){};}}function
+selectSearchSearch(){if(!this.value){this.parentNode.firstChild.selectedIndex=0;}}function
+columnMouse(className){var
+spans=qsa('span',this);for(var
+i=0;i<spans.length;i++){if(/column/.test(spans[i].className)){spans[i].className='column'+(className||'');}}}function
+selectSearch(name){var
+el=qs('#fieldset-search');el.className='';var
+divs=qsa('div',el);for(var
+i=0;i<divs.length;i++){var
+div=divs[i];var
+el=qs('[name$="[col]"]',div);if(el&&selectValue(el)==name){break;}}if(i==divs.length){div.firstChild.value=name;div.firstChild.onchange();}qs('[name$="[val]"]',div).focus();return false;}function
+isCtrl(event){return(event.ctrlKey||event.metaKey)&&!event.altKey;}function
+getTarget(event){return event.target||event.srcElement;}function
+bodyKeydown(event,button){eventStop(event);var
+target=getTarget(event);if(target.jushTextarea){target=target.jushTextarea;}if(isCtrl(event)&&(event.keyCode==13||event.keyCode==10)&&isTag(target,'select|textarea|input')){target.blur();if(button){target.form[button].click();}else{if(target.form.onsubmit){target.form.onsubmit();}target.form.submit();}target.focus();return false;}return true;}function
+bodyClick(event){var
+target=getTarget(event);if((isCtrl(event)||event.shiftKey)&&target.type=='submit'&&isTag(target,'input')){target.form.target='_blank';setTimeout(function(){target.form.target='';},0);}}function
+editingKeydown(event){if((event.keyCode==40||event.keyCode==38)&&isCtrl(event)){var
+target=getTarget(event);var
+sibling=(event.keyCode==40?'nextSibling':'previousSibling');var
+el=target.parentNode.parentNode[sibling];if(el&&(isTag(el,'tr')||(el=el[sibling]))&&isTag(el,'tr')&&(el=el.childNodes[nodePosition(target.parentNode)])&&(el=el.childNodes[nodePosition(target)])){el.focus();}return false;}if(event.shiftKey&&!bodyKeydown(event,'insert')){return false;}return true;}function
+functionChange(){var
+input=this.form[this.name.replace(/^function/,'fields')];if(input){if(selectValue(this)){if(input.origType===undefined){input.origType=input.type;input.origMaxLength=input.getAttribute('data-maxlength');}input.removeAttribute('data-maxlength');input.type='text';}else
+if(input.origType){input.type=input.origType;if(input.origMaxLength>=0){input.setAttribute('data-maxlength',input.origMaxLength);}}oninput({target:input});}helpClose();}function
+skipOriginal(first){var
+fnSelect=this.previousSibling.firstChild;if(fnSelect.selectedIndex<first){fnSelect.selectedIndex=first;}}function
+fieldChange(){var
+row=cloneNode(parentTag(this,'tr'));var
+inputs=qsa('input',row);for(var
+i=0;i<inputs.length;i++){inputs[i].value='';}parentTag(this,'table').appendChild(row);this.oninput=function(){};}function
+ajax(url,callback,data,message){var
+request=(window.XMLHttpRequest?new
+XMLHttpRequest():(window.ActiveXObject?new
+ActiveXObject('Microsoft.XMLHTTP'):false));if(request){var
+ajaxStatus=qs('#ajaxstatus');if(message){ajaxStatus.innerHTML='<div class="message">'+message+'</div>';ajaxStatus.className=ajaxStatus.className.replace(/ hidden/g,'');}else{ajaxStatus.className+=' hidden';}request.open((data?'POST':'GET'),url);if(data){request.setRequestHeader('Content-Type','application/x-www-form-urlencoded');}request.setRequestHeader('X-Requested-With','XMLHttpRequest');request.onreadystatechange=function(){if(request.readyState==4){if(/^2/.test(request.status)){callback(request);}else{ajaxStatus.innerHTML=(request.status?request.responseText:'<div class="error">'+offlineMessage+'</div>');ajaxStatus.className=ajaxStatus.className.replace(/ hidden/g,'');}}};request.send(data);}return request;}function
+ajaxSetHtml(url){return!ajax(url,function(request){var
+data=window.JSON?JSON.parse(request.responseText):eval('('+request.responseText+')');for(var
+key
+in
+data){setHtml(key,data[key]);}});}function
+ajaxForm(form,message,button){var
+data=[];var
+els=form.elements;for(var
+i=0;i<els.length;i++){var
+el=els[i];if(el.name&&!el.disabled){if(/^file$/i.test(el.type)&&el.value){return false;}if(!/^(checkbox|radio|submit|file)$/i.test(el.type)||el.checked||el==button){data.push(encodeURIComponent(el.name)+'='+encodeURIComponent(isTag(el,'select')?selectValue(el):el.value));}}}data=data.join('&');var
+url=form.action;if(!/post/i.test(form.method)){url=url.replace(/\?.*/,'')+'?'+data;data='';}return ajax(url,function(request){setHtml('ajaxstatus',request.responseText);if(window.jush){jush.highlight_tag(qsa('code',qs('#ajaxstatus')),0);}messagesPrint(qs('#ajaxstatus'));},data,message);}function
+selectClick(event,text,warning){var
+td=this;var
+target=getTarget(event);if(!isCtrl(event)||isTag(td.firstChild,'input|textarea')||isTag(target,'a')){return;}if(warning){alert(warning);return true;}var
+original=td.innerHTML;text=text||/\n/.test(original);var
+input=document.createElement(text?'textarea':'input');input.onkeydown=function(event){if(!event){event=window.event;}if(event.keyCode==27&&!event.shiftKey&&!event.altKey&&!isCtrl(event)){inputBlur.apply(input);td.innerHTML=original;}};var
+pos=event.rangeOffset;var
+value=(td.firstChild&&td.firstChild.alt)||td.textContent||td.innerText;input.style.width=Math.max(td.clientWidth-14,20)+'px';if(text){var
+rows=1;value.replace(/\n/g,function(){rows++;});input.rows=rows;}if(qsa('i',td).length){value='';}if(document.selection){var
+range=document.selection.createRange();range.moveToPoint(event.clientX,event.clientY);var
+range2=range.duplicate();range2.moveToElementText(td);range2.setEndPoint('EndToEnd',range);pos=range2.text.length;}td.innerHTML='';td.appendChild(input);setupSubmitHighlight(td);input.focus();if(text==2){return ajax(location.href+'&'+encodeURIComponent(td.id)+'=',function(request){if(request.responseText){input.value=request.responseText;input.name=td.id;}});}input.value=value;input.name=td.id;input.selectionStart=pos;input.selectionEnd=pos;if(document.selection){var
+range=document.selection.createRange();range.moveEnd('character',-input.value.length+pos);range.select();}return true;}function
+selectLoadMore(limit,loading){var
+a=this;var
+title=a.innerHTML;var
+href=a.href;a.innerHTML=loading;if(href){a.removeAttribute('href');return!ajax(href,function(request){var
+tbody=document.createElement('tbody');tbody.innerHTML=request.responseText;qs('#table').appendChild(tbody);if(tbody.children.length<limit){a.parentNode.removeChild(a);}else{a.href=href.replace(/\d+$/,function(page){return+page+1;});a.innerHTML=title;}});}}function
+eventStop(event){if(event.stopPropagation){event.stopPropagation();}else{event.cancelBubble=true;}}function
+setupSubmitHighlight(parent){for(var
+key
+in{input:1,select:1,textarea:1}){var
+inputs=qsa(key,parent);for(var
+i=0;i<inputs.length;i++){setupSubmitHighlightInput(inputs[i])}}}function
+setupSubmitHighlightInput(input){if(!/submit|image|file/.test(input.type)){addEvent(input,'focus',inputFocus);addEvent(input,'blur',inputBlur);}}function
+inputFocus(){var
+submit=findDefaultSubmit(this);if(submit){alterClass(submit,'default',true);}}function
+inputBlur(){var
+submit=findDefaultSubmit(this);if(submit){alterClass(submit,'default');}}function
+findDefaultSubmit(el){if(el.jushTextarea){el=el.jushTextarea;}if(!el.form){return null;}var
+inputs=qsa('input',el.form);for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];if(input.type=='submit'&&!input.style.zIndex){return input;}}}function
+addEvent(el,action,handler){if(el.addEventListener){el.addEventListener(action,handler,false);}else{el.attachEvent('on'+action,handler);}}function
+focus(el){setTimeout(function(){el.focus();},0);}function
+cloneNode(el){var
+el2=el.cloneNode(true);var
+selector='input, select';var
+origEls=qsa(selector,el);var
+cloneEls=qsa(selector,el2);for(var
+i=0;i<origEls.length;i++){var
+origEl=origEls[i];for(var
+key
+in
+origEl){if(/^on/.test(key)&&origEl[key]){cloneEls[i][key]=origEl[key];}}}setupSubmitHighlight(el2);return el2;}oninput=function(event){var
+target=event.target;var
+maxLength=target.getAttribute('data-maxlength');alterClass(target,'maxlength',target.value&&maxLength!=null&&target.value.length>maxLength);};function
+bodyLoad(version,maria){if(window.jush){jush.create_links=' target="_blank" rel="noreferrer noopener"';if(version){for(var
+key
+in
+jush.urls){var
+obj=jush.urls;if(typeof
+obj[key]!='string'){obj=obj[key];key=0;if(maria){for(var
+i=1;i<obj.length;i++){obj[i]=obj[i].replace(/\.html/,'/').replace(/-type-syntax/,'-data-types').replace(/numeric-(data-types)/,'$1-$&').replace(/#statvar_.*/,'#$$1');}}}obj[key]=(maria?obj[key].replace(/dev\.mysql\.com\/doc\/mysql\/en\//,'mariadb.com/kb/en/library/'):obj[key]).replace(/\/doc\/mysql/,'/doc/refman/'+version).replace(/\/docs\/current/,'/docs/'+version);}}if(window.jushLinks){jush.custom_links=jushLinks;}jush.highlight_tag('code',0);var
+tags=qsa('textarea');for(var
+i=0;i<tags.length;i++){if(/(^|\s)jush-/.test(tags[i].className)){var
+pre=jush.textarea(tags[i]);if(pre){setupSubmitHighlightInput(pre);}}}}}function
+formField(form,name){for(var
+i=0;i<form.length;i++){if(form[i].name==name){return form[i];}}}function
+typePassword(el,disable){try{el.type=(disable?'text':'password');}catch(e){}}function
+messagesPrint(el){var
+els=qsa('.toggle',el);for(var
+i=0;i<els.length;i++){els[i].onclick=partial(toggle,els[i].getAttribute('href').substr(1));}}function
+loginDriver(driver){var
+trs=parentTag(driver,'table').rows;var
+disabled=/sqlite/.test(selectValue(driver));alterClass(trs[1],'hidden',disabled);trs[1].getElementsByTagName('input')[0].disabled=disabled;}var
+dbCtrl;var
+dbPrevious={};function
+dbMouseDown(event){dbCtrl=isCtrl(event);if(dbPrevious[this.name]==undefined){dbPrevious[this.name]=this.value;}}function
+dbChange(){if(dbCtrl){this.form.target='_blank';}this.form.submit();this.form.target='';if(dbCtrl&&dbPrevious[this.name]!=undefined){this.value=dbPrevious[this.name];dbPrevious[this.name]=undefined;}}function
+selectFieldChange(){var
+form=this.form;var
+ok=(function(){var
+inputs=qsa('input',form);for(var
+i=0;i<inputs.length;i++){if(inputs[i].value&&/^fulltext/.test(inputs[i].name)){return true;}}var
+ok=form.limit.value;var
+selects=qsa('select',form);var
+group=false;var
+columns={};for(var
+i=0;i<selects.length;i++){var
+select=selects[i];var
+col=selectValue(select);var
+match=/^(where.+)col\]/.exec(select.name);if(match){var
+op=selectValue(form[match[1]+'op]']);var
+val=form[match[1]+'val]'].value;if(col
+in
+indexColumns&&(!/LIKE|REGEXP/.test(op)||(op=='LIKE'&&val.charAt(0)!='%'))){return true;}else
+if(col||val){ok=false;}}if((match=/^(columns.+)fun\]/.exec(select.name))){if(/^(avg|count|count distinct|group_concat|max|min|sum)$/.test(col)){group=true;}var
+val=selectValue(form[match[1]+'col]']);if(val){columns[col&&col!='count'?'':val]=1;}}if(col&&/^order/.test(select.name)){if(!(col
+in
+indexColumns)){ok=false;}break;}}if(group){for(var
+col
+in
+columns){if(!(col
+in
+indexColumns)){ok=false;}}}return ok;})();setHtml('noindex',(ok?'':'!'));}var
+added='.',rowCount;function
+delimiterEqual(val,a,b){return(val==a+'_'+b||val==a+b||val==a+b.charAt(0).toUpperCase()+b.substr(1));}function
+idfEscape(s){return s.replace(/`/,'``');}function
+editFields(){var
+els=qsa('[name$="[field]"]');for(var
+i=0;i<els.length;i++){els[i].oninput=function(){editingNameChange.call(this);if(!this.defaultValue){editingAddRow.call(this);}}}els=qsa('[name$="[length]"]');for(var
+i=0;i<els.length;i++){mixin(els[i],{onfocus:editingLengthFocus,oninput:editingLengthChange});}els=qsa('[name$="[type]"]');for(var
+i=0;i<els.length;i++){mixin(els[i],{onfocus:function(){lastType=selectValue(this);},onchange:editingTypeChange,onmouseover:function(event){helpMouseover.call(this,event,getTarget(event).value,1)},onmouseout:helpMouseout});}}function
+editingClick(event){var
+el=getTarget(event);if(!isTag(el,'input')){el=parentTag(el,'label');el=el&&qs('input',el);}if(el){var
+name=el.name;if(/^add\[/.test(name)){editingAddRow.call(el,1);}else
+if(/^up\[/.test(name)){editingMoveRow.call(el,1);}else
+if(/^down\[/.test(name)){editingMoveRow.call(el);}else
+if(/^drop_col\[/.test(name)){editingRemoveRow.call(el,'fields\$1[field]');}else{if(name=='auto_increment_col'){var
+field=el.form['fields['+el.value+'][field]'];if(!field.value){field.value='id';field.oninput();}}return;}return false;}}function
+editingInput(event){var
+el=getTarget(event);if(/\[default\]$/.test(el.name)){el.previousSibling.checked=true;}}function
+editingNameChange(){var
+name=this.name.substr(0,this.name.length-7);var
+type=formField(this.form,name+'[type]');var
+opts=type.options;var
+candidate;var
+val=this.value;for(var
+i=opts.length;i--;){var
+match=/(.+)`(.+)/.exec(opts[i].value);if(!match){if(candidate&&i==opts.length-2&&val==opts[candidate].value.replace(/.+`/,'')&&name=='fields[1]'){return;}break;}var
+table=match[1];var
+column=match[2];var
+tables=[table,table.replace(/s$/,''),table.replace(/es$/,'')];for(var
+j=0;j<tables.length;j++){table=tables[j];if(val==column||val==table||delimiterEqual(val,table,column)||delimiterEqual(val,column,table)){if(candidate){return;}candidate=i;break;}}}if(candidate){type.selectedIndex=candidate;type.onchange();}}function
+editingAddRow(focus){var
+match=/(\d+)(\.\d+)?/.exec(this.name);var
+x=match[0]+(match[2]?added.substr(match[2].length):added)+'1';var
+row=parentTag(this,'tr');var
+row2=cloneNode(row);var
+tags=qsa('select',row);var
+tags2=qsa('select',row2);for(var
+i=0;i<tags.length;i++){tags2[i].name=tags[i].name.replace(/[0-9.]+/,x);tags2[i].selectedIndex=tags[i].selectedIndex;}tags=qsa('input',row);tags2=qsa('input',row2);var
+input=tags2[0];for(var
+i=0;i<tags.length;i++){if(tags[i].name=='auto_increment_col'){tags2[i].value=x;tags2[i].checked=false;}tags2[i].name=tags[i].name.replace(/([0-9.]+)/,x);if(/\[(orig|field|comment|default)/.test(tags[i].name)){tags2[i].value='';}if(/\[(has_default)/.test(tags[i].name)){tags2[i].checked=false;}}tags[0].oninput=editingNameChange;row.parentNode.insertBefore(row2,row.nextSibling);if(focus){input.oninput=editingNameChange;input.focus();}added+='0';rowCount++;return false;}function
+editingRemoveRow(name){var
+field=formField(this.form,this.name.replace(/[^\[]+(.+)/,name));field.parentNode.removeChild(field);parentTag(this,'tr').style.display='none';return false;}function
+editingMoveRow(up){var
+row=parentTag(this,'tr');if(!('nextElementSibling'in
+row)){return true;}row.parentNode.insertBefore(row,up?row.previousElementSibling:row.nextElementSibling?row.nextElementSibling.nextElementSibling:row.parentNode.firstChild);return false;}var
+lastType='';function
+editingTypeChange(){var
+type=this;var
+name=type.name.substr(0,type.name.length-6);var
+text=selectValue(type);for(var
+i=0;i<type.form.elements.length;i++){var
+el=type.form.elements[i];if(el.name==name+'[length]'){if(!((/(char|binary)$/.test(lastType)&&/(char|binary)$/.test(text))||(/(enum|set)$/.test(lastType)&&/(enum|set)$/.test(text)))){el.value='';}el.oninput.apply(el);}if(lastType=='timestamp'&&el.name==name+'[has_default]'&&/timestamp/i.test(formField(type.form,name+'[default]').value)){el.checked=false;}if(el.name==name+'[collation]'){alterClass(el,'hidden',!/(char|text|enum|set)$/.test(text));}if(el.name==name+'[unsigned]'){alterClass(el,'hidden',!/(^|[^o])int(?!er)|numeric|real|float|double|decimal|money/.test(text));}if(el.name==name+'[on_update]'){alterClass(el,'hidden',!/timestamp|datetime/.test(text));}if(el.name==name+'[on_delete]'){alterClass(el,'hidden',!/`/.test(text));}}helpClose();}function
+editingLengthChange(){alterClass(this,'required',!this.value.length&&/var(char|binary)$/.test(selectValue(this.parentNode.previousSibling.firstChild)));}function
+editingLengthFocus(){var
+td=this.parentNode;if(/(enum|set)$/.test(selectValue(td.previousSibling.firstChild))){var
+edit=qs('#enum-edit');edit.value=enumValues(this.value);td.appendChild(edit);this.style.display='none';edit.style.display='inline';edit.focus();}}function
+enumValues(s){var
+re=/(^|,)\s*'(([^\\']|\\.|'')*)'\s*/g;var
+result=[];var
+offset=0;var
+match;while(match=re.exec(s)){if(offset!=match.index){break;}result.push(match[2].replace(/'(')|\\(.)/g,'$1$2'));offset+=match[0].length;}return(offset==s.length?result.join('\n'):s);}function
+editingLengthBlur(){var
+field=this.parentNode.firstChild;var
+val=this.value;field.value=(/^'[^\n]+'$/.test(val)?val:val&&"'"+val.replace(/\n+$/,'').replace(/'/g,"''").replace(/\\/g,'\\\\').replace(/\n/g,"','")+"'");field.style.display='inline';this.style.display='none';}function
+columnShow(checked,column){var
+trs=qsa('tr',qs('#edit-fields'));for(var
+i=0;i<trs.length;i++){alterClass(qsa('td',trs[i])[column],'hidden',!checked);}}function
+partitionByChange(){var
+partitionTable=/RANGE|LIST/.test(selectValue(this));alterClass(this.form['partitions'],'hidden',partitionTable||!this.selectedIndex);alterClass(qs('#partition-table'),'hidden',!partitionTable);helpClose();}function
+partitionNameChange(){var
+row=cloneNode(parentTag(this,'tr'));row.firstChild.firstChild.value='';parentTag(this,'table').appendChild(row);this.oninput=function(){};}function
+editingCommentsClick(el,focus){var
+comment=el.form['Comment'];columnShow(el.checked,6);alterClass(comment,'hidden',!el.checked);if(focus&&el.checked){comment.focus();}}function
+dumpClick(event){var
+el=parentTag(getTarget(event),'label');if(el){el=qs('input',el);var
+match=/(.+)\[\]$/.exec(el.name);if(match){checkboxClick.call(el,event);formUncheck('check-'+match[1]);}}}function
+foreignAddRow(){var
+row=cloneNode(parentTag(this,'tr'));this.onchange=function(){};var
+selects=qsa('select',row);for(var
+i=0;i<selects.length;i++){selects[i].name=selects[i].name.replace(/\]/,'1$&');selects[i].selectedIndex=0;}parentTag(this,'table').appendChild(row);}function
+indexesAddRow(){var
+row=cloneNode(parentTag(this,'tr'));this.onchange=function(){};var
+selects=qsa('select',row);for(var
+i=0;i<selects.length;i++){selects[i].name=selects[i].name.replace(/indexes\[\d+/,'$&1');selects[i].selectedIndex=0;}var
+inputs=qsa('input',row);for(var
+i=0;i<inputs.length;i++){inputs[i].name=inputs[i].name.replace(/indexes\[\d+/,'$&1');inputs[i].value='';}parentTag(this,'table').appendChild(row);}function
+indexesChangeColumn(prefix){var
+names=[];for(var
+tag
+in{'select':1,'input':1}){var
+columns=qsa(tag,parentTag(this,'td'));for(var
+i=0;i<columns.length;i++){if(/\[columns\]/.test(columns[i].name)){var
+value=selectValue(columns[i]);if(value){names.push(value);}}}}this.form[this.name.replace(/\].*/,'][name]')].value=prefix+names.join('_');}function
+indexesAddColumn(prefix){var
+field=this;var
+select=field.form[field.name.replace(/\].*/,'][type]')];if(!select.selectedIndex){while(selectValue(select)!="INDEX"&&select.selectedIndex<select.options.length){select.selectedIndex++;}select.onchange();}var
+column=cloneNode(field.parentNode);var
+selects=qsa('select',column);for(var
+i=0;i<selects.length;i++){select=selects[i];select.name=select.name.replace(/\]\[\d+/,'$&1');select.selectedIndex=0;}field.onchange=partial(indexesChangeColumn,prefix);var
+inputs=qsa('input',column);for(var
+i=0;i<inputs.length;i++){var
+input=inputs[i];input.name=input.name.replace(/\]\[\d+/,'$&1');if(input.type!='checkbox'){input.value='';}}parentTag(field,'td').appendChild(column);field.onchange();}function
+sqlSubmit(form,root){if(encodeURIComponent(form['query'].value).length<2e3){form.action=root+'&sql='+encodeURIComponent(form['query'].value)+(form['limit'].value?'&limit='+
++form['limit'].value:'')+(form['error_stops'].checked?'&error_stops=1':'')+(form['only_errors'].checked?'&only_errors=1':'');}}function
+triggerChange(tableRe,table,form){var
+formEvent=selectValue(form['Event']);if(tableRe.test(form['Trigger'].value)){form['Trigger'].value=table+'_'+(selectValue(form['Timing']).charAt(0)+formEvent.charAt(0)).toLowerCase();}alterClass(form['Of'],'hidden',!/ OF/.test(formEvent));}var
+that,x,y;function
+schemaMousedown(event){if((event.which?event.which:event.button)==1){that=this;x=event.clientX-this.offsetLeft;y=event.clientY-this.offsetTop;}}function
+schemaMousemove(event){if(that!==undefined){var
+left=(event.clientX-x)/em;var
+top=(event.clientY-y)/em;var
+divs=qsa('div',that);var
+lineSet={};for(var
+i=0;i<divs.length;i++){if(divs[i].className=='references'){var
+div2=qs('[id="'+(/^refs/.test(divs[i].id)?'refd':'refs')+divs[i].id.substr(4)+'"]');var
+ref=(tablePos[divs[i].title]?tablePos[divs[i].title]:[div2.parentNode.offsetTop/em,0]);var
+left1=-1;var
+id=divs[i].id.replace(/^ref.(.+)-.+/,'$1');if(divs[i].parentNode!=div2.parentNode){left1=Math.min(0,ref[1]-left)-1;divs[i].style.left=left1+'em';divs[i].querySelector('div').style.width=-left1+'em';var
+left2=Math.min(0,left-ref[1])-1;div2.style.left=left2+'em';div2.querySelector('div').style.width=-left2+'em';}if(!lineSet[id]){var
+line=qs('[id="'+divs[i].id.replace(/^....(.+)-.+$/,'refl$1')+'"]');var
+top1=top+divs[i].offsetTop/em;var
+top2=top+div2.offsetTop/em;if(divs[i].parentNode!=div2.parentNode){top2+=ref[0]-top;line.querySelector('div').style.height=Math.abs(top1-top2)+'em';}line.style.left=(left+left1)+'em';line.style.top=Math.min(top1,top2)+'em';lineSet[id]=true;}}}that.style.left=left+'em';that.style.top=top+'em';}}function
+schemaMouseup(event,db){if(that!==undefined){tablePos[that.firstChild.firstChild.firstChild.data]=[(event.clientY-y)/em,(event.clientX-x)/em];that=undefined;var
+s='';for(var
+key
+in
+tablePos){s+='_'+key+':'+Math.round(tablePos[key][0]*10000)/10000+'x'+Math.round(tablePos[key][1]*10000)/10000;}s=encodeURIComponent(s.substr(1));var
+link=qs('#schema-link');link.href=link.href.replace(/[^=]+$/,'')+s;cookie('adminer_schema-'+db+'='+s,30);}}var
+helpOpen,helpIgnore;function
+helpMouseover(event,text,side){var
+target=getTarget(event);if(!text){helpClose();}else
+if(window.jush&&(!helpIgnore||this!=target)){helpOpen=1;var
+help=qs('#help');help.innerHTML=text;jush.highlight_tag([help]);alterClass(help,'hidden');var
+rect=target.getBoundingClientRect();var
+body=document.documentElement;help.style.top=(body.scrollTop+rect.top-(side?(help.offsetHeight-target.offsetHeight)/2:help.offsetHeight))+'px';help.style.left=(body.scrollLeft+rect.left-(side?help.offsetWidth:(help.offsetWidth-target.offsetWidth)/2))+'px';}}function
+helpMouseout(event){helpOpen=0;helpIgnore=(this!=getTarget(event));setTimeout(function(){if(!helpOpen){helpClose();}},200);}function
+helpClose(){alterClass(qs('#help'),'hidden',true);}”ò¿Ÿ         _l$      selector   π©±”      context    ∏OÄ      document   ÿ1:Ú      querySelector      â©       qsl    ^Mk      els    |VÌ      qsa    #•ç      querySelectorAll   C<≠e      partial	    ‹Ÿú…      args
+   ÿÖ Ã      slice      	∆dñ
+      partialArg     6Òë      arg    ∏7≤≤      mixin      B¸ø;      key    ∫≠SÓ
+      alterClass     6CY>	      className      ˛˝ùd      enable     <·∫      (^|\s)     ·Ñ9      (\s|$)     Ogµ      toggle     Ñ€ËW      hidden     _YNx      cookie     ïn.      assign     Ó˛Æ&      days   R∞J      date   ∏á˘2      setDate    ∂≠      getDate    }∫¬m
+      ; expires=     „Ä6      verifyVersion      ÜÉÎ˝      current    £Ì>      token       Ä?C      adminer_version=0!      ·7ªµ      iframe"     DC      createElement#      ú∑»õ      src$    *hM )      https://www.adminer.org/version/?current=%      ceHÓ      frameBorder&    \£      marginHeight'   E >Ö	      scrolling(      ÎƒJ˚      width)      üor      7ex*    ∑…≈      height+     Í˚^?      1.25em,     ¯2áâ      window-     vQT      postMessage.     rO      addEventListener/   e}ü      display0    ,Ω      none1   II∑P      event2      =®Ä;      origin3     *~Ö      https://www.adminer.org4    ñ|∑      version=(.+)5   6ó(Å      data6   E;–Ñ      adminer_version=7   æd»ê      ajax8   +"]q      script=version9     --&=      &token=:    ¸‰4Z      #version;   ≠$~      appendChild<    Gm$A      selectValue=    1<Î      select>     õº3      selectedIndex?      ≈.»œ      selected@    :yã      optionsA    „å5∆
+      attributesB     ñøóƒ	      specifiedC      à3¿µ      textD   ˝‘zÁ      isTagE      sN1G      tagF    ”—ì(      ^(G     ‹Ï#      )$H     ﬁﬁÿ      tagNameI    íŒ±#	      parentTagJ      •_œ”
+      parentNodeK     AÆƒz      trCheckL    »:0ó      checkedM    *g“€      formN   £’/Â      allO    EﬁS      onclickP    c?ç‰      selectCountQ    ‚p›      setHtmlR    Û N.      \B(?=(\d{3})+$)S    fÿ4Ï      thousandsSeparatorT     4Ûº’      inputsU     dÙ∂      submitV     ûzÉw      disabledW   »Å9æ	      formCheckX      ?<Í      elemsY      _TÙÔ      elementsZ   œ¸Î
+      tableCheck[     G8s$      table.checkable td:first-child input\   “òË      formUncheck]    ZDN      formChecked^    LÔ.
+      tableClick_     ü™‚X      click`      ·¯›£	      getTargeta      4>ÙE      getAttributeb   æ	      data-textc      }òë      selectClickd    ∂w©S      data-warninge    „qˆ      getSelectionf   v»Z      isCollapsedg    Ñ¨π      table|a|input|textareah     ÿy*      checkboxi    î3É      checkboxClickj      ~Xﬂ∫
+      firstChildk     ™†2      check[]l    @–:+      all-pagem   OU»·      ^(tables|views)\[\]$n   DFH	      check-allo      âøŒ      lastCheckedp    ô,Åÿ      shiftKeyq   ∂dî      tabler      J$≥]      checkings   ‘„X      htmlt   Â´˝      [id="u      †z(—      [\\"]v      {S˛8      \$&w    ı£Ø      "]x     Q√:	      innerHTMLy      vÎÓm      nodePositionz   U,2ñ      pos{    x X‚      previousSibling|    
+X±	      pageClick}      ª©`X      href~   „∞ı      page   0+QA      locationÄ   3Q0≈      &page=Å      œŒ°      menuOverÇ   bö      a|spanÉ     ÒÒß
+      offsetLeftÑ     ≥Z÷¶      offsetWidthÖ    ˝íc˛      overflowÜ   ?Iqõ      visibleá    ˛ç|Ê      menuOutà    z¡≤S      autoâ   ˛1f      selectAddRowä   †“ñ!      fieldã      Ï%N¬      rowå    õÉ”g	      cloneNodeç      3      onchangeé   ≥O4      selectFieldChangeè      ^Ï¨      selectsê    Îè1Õ
+      [a-z]\[\d+ë      ìÔì      $&1í    ôµ$æ      selectSearchKeydownì    ≠5      keyCodeî    do*˛      onsearchï   G6◊y      selectSearchSearchñ     Xy“ø      columnMouseó    √™`      spansò      ±4PB      spanô   ä"’g      columnö     â›(`      selectSearchõ   ;u‚      #fieldset-searchú   ®jöj      divsù   ú≥ÊŸ      divû    ‘;      [name$="[col]"]ü    zJg+      [name$="[val]"]†    KÃÌ      focus°      qÛk„      isCtrl¢     
+@•&      ctrlKey£    `$ü˝      metaKey§    ◊ïÊ      altKey•     |5Œ
+      srcElement¶     !iäC      bodyKeydownß    ˙U~      button®     ˝ï¸;	      eventStop©      oç'Ë      jushTextarea™   ÛZD5      select|textarea|input´      ƒ∫·%      blur¨   àâ®µ      onsubmit≠   ÓΩNÎ	      bodyClickÆ      9“◊^      _blankØ     3AtŸ
+      setTimeout∞     ùøJ      editingKeydown±     jl¯      sibling≤    Ñ'n      nextSibling≥    ≥ÜBa
+      childNodes¥     ﬁô«	      insertµ     DoÔ      functionChange∂     Œ:<Ë	      ^function∑      ˇHDâ      fields∏     µÌJ      origTypeπ   ÿèˇ      origMaxLength∫      {£À      data-maxlengthª     $Gà†      removeAttributeº    ó{⁄D      setAttributeΩ   ;d∑      oninputæ    ÀT÷	      helpCloseø      ærÄC      skipOriginal¿   `~ﬂ      first¡      Ûòã      fnSelect¬   ïtS0      fieldChange√    Ë€˘      callbackƒ   l(      request≈    ⁄$€      XMLHttpRequest∆     åCKr      ActiveXObject«      !j¿      Microsoft.XMLHTTP»      ﬁÎæ
+      ajaxStatus…     {pµN      #ajaxstatus     ˝~8c      <div class="message">À      ©è^      </div>Ã     ´ØkÂ       hiddenÕ    óx5      openŒ   ﬂ:      POSTœ   ≈ô¸
+      GET–    f–ˇ      setRequestHeader—   ﬁ‡l      Content-Type“   ÊYIË!      application/x-www-form-urlencoded”      ‰EQ8      X-Requested-With‘   ÂWÌ¬      onreadystatechange’     πUüï
+      readyState÷     )¨‡›      ^2◊     H}ı#      responseTextÿ   ÎÁÇ”      <div class="error">Ÿ    pö7
+      offlineMessage⁄     ¸,∏      send€   -
+Ó      ajaxSetHtml‹    5ıá∆      parse›      pAŸº      ajaxFormﬁ   Øm≠      ^file$ﬂ     ˝%√E      ^(checkbox|radio|submit|file)$‡     Ñu2      push·   	‡Ï      action‚     ﬂb+      post„   Ωpwm      method‰     ◊mW      \?.*Â   ì}Ù
+      ajaxstatusÊ     'Ï¨Ê      jushÁ   –gb1      highlight_tagË      ähc)      codeÈ   ¯'J      messagesPrintÍ      ÁK Ì      warningÎ    √Ò‚i      input|textareaÏ     “Ô¢Z      alertÌ      Õ_      originalÓ         \nÔ     ÷ŸÓ      textarea   "æx	      onkeydownÒ      Œn"	      inputBlurÚ      J“Ó˘      rangeOffsetÛ    Kl¸      altÙ    b»≈e      textContentı    ≠	év	      innerTextˆ      Kk.      max˜    ïß˘G      clientWidth¯    ”Qn$      rows˘   l8oi	      selection˙      x√       range˚      ⁄ËS#      createRange¸    µΩ      moveToPoint˝    ∫”á      clientX˛    À3&      clientYˇ    3‘‰_      range2     uÁ…	      duplicate     Ósch      moveToElementText     WuÙ      setEndPoint   Ú]      EndToEnd  }êÈ›      setupSubmitHighlight  ÂA¸¨      selectionStart    L0F      selectionEnd  ˝Ä”á      moveEnd   –¥ï$	      character	     b∏‘      selectLoadMore
+     IÙ°      limit     cÅÁÙ      loading   “E      title     ßèâv      tbody     ≥¯˙      #table    
+}N      children  ˘˙K      removeChild   Ñj      \d+$  ı/F/      stopPropagation   … E      cancelBubble  ˛Ë˘2      parent     ëMÖ      setupSubmitHighlightInput     ø°õ∆      submit|image|file     Êòâ6      addEvent  I,‹á
+      inputFocus    Z;      findDefaultSubmit     f˜      zIndex    ÜáZ`      handler   VıZ/      attachEvent   ◊Xx{      el2   C(5      input, select     uVÏR      origEls    áëe≠      cloneEls!  á°ıu      origEl"    aÍ€G      ^on#   -«8	      maxLength$     ÀÈ>	      maxlength%     µjC      bodyLoad&  èæ_„      version'   ¶Âœ,      maria(     Î⁄w      create_links)  áxÃÔ*       target="_blank" rel="noreferrer noopener"*    e~˙£      urls+  ﬂN#9      obj,   =¯Q      \.html-    N3ÜH      -type-syntax.  ›µ!%      -data-types/   /&ªœ      numeric-(data-types)0  ±◊y™      $1-$&1     ]+Ëø      #statvar_.*2   2éóπ      #$$13  ?uÃ`!      dev\.mysql\.com\/doc\/mysql\/en\/4     ÎJƒõ      mariadb.com/kb/en/library/5    {πHÏ      \/doc\/mysql6  KIƒ¸      /doc/refman/7  «NéK      \/docs\/current8   ≥Œ`Ñ      /docs/9    KsP	      jushLinks:     Ï}é|      custom_links;  É¥m      tags<  πÒ!      (^|\s)jush-=   ˙4û√      pre>   ;	k0	      formField?     ké~      typePassword@  7ÖR      disableA   ¯©òﬂ      passwordB  sNG-      .toggleC   6ôfÿ      substrD    È˛“˙      loginDriverE   ±5      driverF    Ôm∏w      trsG   jî¸F      sqliteH    XFZ      getElementsByTagNameI  Ï$‘)      dbCtrlJ    Ωu∂/
+      dbPreviousK    WÒÔï      dbMouseDownL   ?9c6      dbChangeM  ≥©ﬂf	      ^fulltextN     á}Æ!      columnsO   P{Ò      colP   Ó˝ú      ^(where.+)col\]Q   M@±¬      op]R   &⁄õ      valS   ì‰       val]T  €∫o(      indexColumnsU  ÔG#E      LIKE|REGEXPV   =ÓÇ·      LIKEW  våƒ      charAtX    i4´a      ^(columns.+)fun\]Y     XËÙ5      ^(avg|count|count distinct|group_concat|max|min|sum)$Z     aæ      col][  ]*ˇº      ^order\    ‚9“      noindex]    ?æ      added^     ƒæQ      rowCount_  €wä˘      delimiterEqual`    ¨‚s◊      toUpperCasea   _ 2	      idfEscapeb     ö≤‘Ô      ``c    ≈|ﬁæ
+      editFieldsd    “/@£      [name$="[field]"]e     ¸aL/      editingNameChangef     ‹â      defaultValueg  „Pè‚      editingAddRowh     ï∆V      [name$="[length]"]i    \%ÃÂ      onfocusj   Ÿ°¡4      editingLengthFocusk    éÔè†      editingLengthChangel   jJ
+      [name$="[type]"]m  3ÛD
+      lastTypen  ˘º$Û      editingTypeChangeo     âﬂŒ      onmouseoverp   *lﬁF      helpMouseoverq     <"w
+      onmouseoutr    ,,      helpMouseouts  ∂3b5      editingClickt  ¥%q      ^add\[u    ›Ÿ‰≤      ^up\[v     ˆE∑⁄      editingMoveRoww    [ÖØ1      ^down\[x   ˇz]À      ^drop_col\[y   ë6,
+      editingRemoveRowz  ][Ÿ¥      fields$1[field]{   ñé      auto_increment_col|    ⁄;ï‘      fields[}   …à      ][field]~  FJÁb      editingInput  LÕâ6      \[default\]$Ä  d£Ô3      [type]Å    ™çG‡      optsÇ  ≥∂ı	      candidateÉ     }Ä/ª	      (.+)`(.+)Ñ     #†Ü∆      .+`Ö   Pñ	      fields[1]Ü     YÛaÃ      tablesá    GD#      es$à   Q$íó      (\d+)(\.\d+)?â     ⁄iX¯      row2ä  ˚Ü˙n      tags2ã     cﬂ∏      [0-9.]+å   ·TG	      ([0-9.]+)ç     ¿SÑf      \[(orig|field|comment|default)é    [§Å      \[(has_default)è   ÂL…2      insertBeforeê  ?L&§
+      [^\[]+(.+)ë    ‰}      nextElementSiblingí    "?ÂÖ      previousElementSiblingì    P∫Y      [length]î  %£íß      (char|binary)$ï    ì'Us      (enum|set)$ñ   \}‘Ú      [has_default]ó     s¡ë 	      [default]ò     ÆùÑ$      [collation]ô   ∏ã”      (char|text|enum|set)$ö     +v+
+      [unsigned]õ    ”q‰9      (^|[^o])int(?!er)|numeric|real|float|double|decimal|moneyú     ˚û      [on_update]ù   ü&íÅ      timestamp|datetimeû    «nBç      [on_delete]ü   èéI;      required†  kEÇ÷      var(char|binary)$°     \Ôùï      edit¢  óÔÈu
+      #enum-edit£    SUõJ
+      enumValues§    Tünì      inline•    º∑¿      (^|,)\s*'(([^\\']|\\.|'')*)'\s*¶   ˇT
+      '(')|\\(.)ß    ,
+|      $1$2®  M0†\      editingLengthBlur©     î≠Ác
+      ^'[^\n]+'$™    (“1Ù      \n+$´  §.(      ''¨    œ5ü      \\≠    ä…®∂      ','Æ   6¯r
+      columnShowØ    CÊí      #edit-fields∞  Ω+√ˇ      partitionByChange±     Yá£;      partitionTable≤    J˛z
+      RANGE|LIST≥    èïæ˙
+      partitions¥    c•˛      #partition-tableµ  ¶ç8ÿ      partitionNameChange∂   ùÂ¥      editingCommentsClick∑  µé©8      comment∏   ¯ˇ(      Commentπ   _ËΩ.	      dumpClick∫     ﬁÕÙ¸	      (.+)\[\]$ª     ≥’‚      check-º    ±…–0      foreignAddRowΩ     º”       \]æ    JEÀF      1$&ø   (»¥%      indexesAddRow¿     PÄp      indexes\[\d+¡  æm      indexesChangeColumn¬   ›2†      prefix√    ¢Ï¶      namesƒ     ›Œª      \[columns\]≈   éåÿG      \].*∆  ∑≈RL      ][name]«   ‘ì      indexesAddColumn»  
+ê⁄      ][type]…   0:ê      INDEX      Õ∞iI      \]\[\d+À   ïH±	      sqlSubmitÃ     Rª‚Ú      rootÕ  XN_ˇ      queryŒ     HØu      &sql=œ     )?øO      &limit=–   ˇ7†      error_stops—   ï<Œ      &error_stops=1“    oí‰´      only_errors”   %uj      &only_errors=1‘    —Ï7â      triggerChange’     ·ºÚú      tableRe÷   ‡‚>€	      formEvent◊     tÇ3       Eventÿ     “7!      TriggerŸ   C†Nm      Timing⁄    RâDo      toLowerCase€   Y0ı˛       OF‹   ˆΩhy      that›  @r      schemaMousedownﬁ   ≈∏0      whichﬂ     ŸDƒ>	      offsetTop‡     ∆Òà      schemaMousemove·   ı]á      left‚  $√Á      top„   .ú•˙      lineSet‰   ˇ·$+
+      referencesÂ    !vÛz      div2Ê  dÆ5≤      ^refsÁ     †Õ¬6      refdË  ?Ωæm      refsÈ  VF'      refÍ   <$Ï‹      tablePosÎ  ÇπÕî      left1Ï     Ï7≤‘      ^ref.(.+)-.+Ì  €U ≥      minÓ   …?ñˆ      left2Ô     +AC"      ^....(.+)-.+$     t•˝{      refl$1Ò    Ü¡Ö      top1Ú  æˇ¯#      top2Û  ˛ .      absÙ   ˆV÷ã      schemaMouseupı     &9!Ï      roundˆ     ¸IÎ’      link˜  \°LÄ      #schema-link¯  ÎîÂ      [^=]+$˘    C&√`      adminer_schema-˙   uÓó      helpOpen˚  Ôüå
+      helpIgnore¸    ~ 9Í      side˝  ÓπØ3      help˛  ûçÁ      #helpˇ     ıF∆Q      rect   »-∞à      getBoundingClientRect     òh;      body  ï,Øp      documentElement   ìGÎ	      scrollTop     Bãwå      offsetHeight  |c…r
+      scrollLeft    Óv÷	      partial/<     ÇYΩ∑      partialArg/<  Åø—N      verifyVersion/<	   )
+      verifyVersion/</<
+     ¬˛Sù!      selectSearchKeydown/this.onsearch     (O«      bodyClick/<   \‹      fieldChange/this.oninput  »bÜ˝      ajax/request.onreadystatechange   ãjó¢      ajaxSetHtml/<     ˜Ô>J
+      ajaxForm/<    „>jq      selectClick/input.onkeydown   ÷t‹u      selectClick/<     ∫Ü≠Í      selectLoadMore/<  æñ^\      selectLoadMore/</a.href<  U˜µS      focus/<   ê6y'      selectFieldChange/ok<     ú∂Ù      editFields/els[i].oninput     }åÕ[       partitionNameChange/this.oninput  ŒÕr˜      foreignAddRow/this.onchange   ÌfE	      indexesAddRow/this.onchange   oxåv      helpMouseout/<     v   a  w   v   T       	   Ô%,â                                                                                                                                                                           	                  
+                                                                                                                                                                                                                                                                                                                                                                                                                            !                  "                  #                  $                  %                  &                  '                 (      (           )                  *                  +                  ,                  -      -           .                 /      /           0                 1      1          2                  3      3           4                 5      5           6      5           7      5           8                 9      9           :      :           ;                  <                  =                  >                  ?                  @                  A                  B                 C      C           D                  E                  G                  H                  I      H                             J                  K                  L                  M                 N      N           O                  P                  Q                  R      R           S      R           T      R           U                  V                  W                  X                  Y                  Z                  [                  \                  ]                  ^                  _                  `                  a                  b                  c      c           d                  e                  f                  g      g           h                  i      i           j                  k                  l                  m                  n                  o                  p                  q                  r                  s      s           t                  u                  F      ≥Oåcg   g   g   P  –p –  –]  –m P¡ –°  –å  –> –π –K –›  –% –¶  –  –o  PZ  –|  –e –‡ – –â  –r –À – –] P∂ –ñ  –  –Å  –j –Æ –é  –W  –∞  –	 –y  –  –› –y `®  –\  –µ  –g –n –i  –¬  –≠  –  –_ –  –Ò  –J P£ –~ –7  –y –È  –  –D  –  –ø  – –Q  –˙ Pµ –<  –ï  –^  –I  –v –? –a –ö  –‹ P –x `« –†  –ú‡í  –‘ –D –ø –c  –® –s –L –^ PÙ –`  –I P˚ Pk –€  –K  –  –∞ –c –º –æ  – –á  –                                                                   ◊`	  P                 m               ◊`	  P                 m               ¶  ë                 ï                 ç ï                                 ⁄ `  P!              1  R                              =  ?              ï E  Œ              ï E              ï [             ç L   ï T  i  Â               '  X  i  m                 T  i              ç ï             ï '  L  X  i              1  _  M C  ï             1  L  T  r  i  Â   m               ç s  ï             ï z               }  ~              1  a  m                 m                 ä  ã  è  i  T  m               1  m                                 m                 ó  i  m               '  ï ú  i  ù               1               1              1  ß  ¶               1  ¶ `                            1  ¶  ±  ï               Â   m               ¿  ¡  m                 ã  T  i  m                                ⁄  √  P5    ƒ  P»  P                             ⁄ `  `m  `i  `             ƒ  P5  P  P  `m  `i  `            M    ß  5    i  ï ⁄               ƒ              1  C  Í  M`¶  Ì  PÂ  `z  ‡  ¯  P˙  ˇ  m                1                               ƒ              
+ P a ` P}  Pm               ƒ                ~               1                 T  i               Â                 U  m                 U  m               ï T  i  Â                ï ·                ï`                            ï        i  !               & '   + i  ; =             M  '  i               ï @          e              ï   i              E F V              1  m                 m                 M  P m                 T  i   è  ª   N =  O R   R              R a  b               s                  i                m                 m               1  m               1  ï '  ä              1  ï               '  ¿  Å Ç R i  R  q  ô  Ü j  m   
+   	         †  R  x  ã  â ; ä i  Â   m               '  ä  m               ô ã  m                 ¿  '  C  i  ï m                 m                 M ° m               s  Œ v  K  R                ä  R m               L  ô  F i                ± m                 ã  m                               ï †  ∑             1  ï R                ã  è  i  m                                 ã  è  i  T  m                               ¬ √ E  N i  ‡  m   	            ¬ ä  =  ô  è  i  T  Â   m                M  Ã             ’ q  M  ÷             1  m               1  · ‚ ú  „ i  Â È Î ç Ó   Ò Ú             1  K s    ˆ             1  C  ¸ ¶  ˝ ˇ  m               1  m                                               1  ¶  # Ø¬0∞4      R     m      u     ê      ê      ô      ∂      Ã     ÷      Ã     ﬁ     ﬂ     ‚     ‰      Ó      Ó               "     ,     -     /     1     3     5     7     <     G     M     P     U     X     Y     [     `      t     u     w     x          É     Ñ     >     á     à     ã     å     ç     é     ê     î     î     ï     ï     ´     ô     õ     ù     `      †     ï     •    ¶    ©     ™     '     ¨    Ó     ≤     ∫     Ω     ¿     ¿     ƒ     ≈     ≈                 €     Ê     Ï     Ô     ¯     IÙ$KEÆ˙ö                ¶          Â   =  Ô             
+      i Ω         i ç  o q    
+      =  Â                   á&’™ç!´!v   ®   ®   F                 	        Ã\   ≠]   i^   º]   —≠_   7`   º_   —≠a   b   ºa   —≠c   d   ºc   —ùE2@Ä  ° o`Pê@Ä  ∂05 `PKÄ  ‘5 `PKÄ  5 	`PKÄ =@Ä S@Ä \ 3P    T   T   '                         ± ï   è   —∞   è   ”H   ÷±  o öù `P¢ P#Q X   X   &                        ∞    ±  ± o ø   —≤   ≤   H   &Iöù0 `P,P(`Pê Q T   T   '                         ± ï   è   —∞   è   ”H   ÷±  o öù `P¢ P#Q h   h   2                       Œø   —∞   ”H   ÷≤   o ”H   ÷o ¿   —i   öù6 `Pë P+P)	`P%/Q  P   P                            –ø   —≥   ”H   ÷≤   ≥   o öù&`Pï 
+P#Q    \   \   '                       Œø   —∞   ”H   ÷≤   o ¿   —i   öù6 `Pë P)`P%>Q    \   \   +                       –ø   —≥   ±  L—≥   ”H   ÷≤   ≥   o öù&`P+`Pï 
+P#Q à   x   8                       ± \ê   ]^ì%   è   ø   ±  ≤   ± ≤   IL——ëÿˇˇˇè   _ù@`Pñ@  D `Pë@  L !P  à            -   ∞   ∞   v                         ±  ím   è   ±  ±  H   ”H   ÷∞       ± %   %o    o ± í   è	      ± %ë   è
+      è
+   %J   —è   ù `P-`Pß "P(ˇˇˇ¯Pπ OP   å   å   V                        ∞       ±  %o ø   —≤   ≤   H      í   è      ë   è      è   J   —öù0 `P/P(	`Pº 2`P!Q å   å   M                        ∞   z’  {  ø   —≤   ”H   ÷≤   ”H   ÷o  ± %q —∞   ±     %≤   %J   —ù0 `Pí0 `Pñ P'ˇˇˇÛP$`Pô )P |  |                         ∞       q —∞   ”H   ÷   o ø   —≤      ±  %J   —≤   J   —≤   J	   —≤   
+   J   —≤   H      J   —≤   H      J   —∞   H   î   è   —∞   H   è   í3   è   ≤   H      J   —∞       i   q —è   ∞       o ”H   ÷≤   q —ù `P,P4 `Pë 	P(`Pì ?`P+`P+`P/`Pî `Pî  `PÆ -`Pî `Pê0A Ä :P9 Ä  •`P+P.P$P    ‘   ‘   ç                        ±  H      íy   è   h   ”H   ÷±  H   o ø   —≤   íO   è   ∞       ≤   I%q —∞    ≥   	   %i
+   ±  H      %≥   %q —è   ù `Pò0 `Pî P(`P.`Pì P$ `P™ P)AP (   (                               ù     Ã   Ã   ã                        ±  H   ì   è   ±  H   öè   ±  H   ±  H   Iø   —≤   H   H   ï   è	   —7   è
+   H   í   è   ≤   H   ë   è   ≤   H   è   öù `Pí `P8 }F 0 	`Pñ %`P” OQ    å   å   Q                        ∞   z   ± %   %   ’  { ø   —±  î!   è   —≤   ”H   ÷±  H   o è   öù0 `P6ò@ 8 `P° P(Q   †   ê   O                        Ÿê    ±  î   è   —∞    ±  ± o è   í   è   ±  H   æ  —ë¡ˇˇˇè   ±  öù 	!fP.,Pì `Pñ `P#
+Q    †             D   ‡   ‡   õ                        ∞    ±     o ø   —∞    ≤      ±  H   q —±  H   î5   è   —±  H   H   î   è
+   —±  H   H   H   è   í"   è   ±  H   H   ”H   ÷q  —è   ù0 `P.	P(
+`Pó 
+P$`PÃ 1`Pî P)P    †  ê                        ∞    ±  ±    í   è      ë3   è      ±    %”H   ÷h   ∞   o %   %è	   q —∞    	   ±  %o ø   —≤   í†   è   ∞
+       ≤   H   H   o ø  —ø  —ê   ≤  ≤  H   í[   è   ≤  ≤  Iø  —≤  H      í   è   ≤  ±    J   —è   ≤  .”'ø  ——ëñˇˇˇè   ù `P  )P/ˇˇˇﬁP4 `P/P(`P> `Pô P('0 `P&fPò0 `P.`Pô `Pò@ `Pó0 HP    †         ©   o       ™                      –ø  —≤  H   H   ø   —ø  —ê   ≤  ≤   H   íq   è   ±  ”H   ÷≤   ≤  IH   o í5   è
+   ≤   ≤  I≤  H   J   —∞    ≤   ≤  Iq —è   ≤  .”'ø  ——ëÄˇˇˇè   ù6 `Pì 0 `P&fPò `Pò P-`Pò `P/P)ˇˇˇπ`Pó TP                Ö   ¿   ∞   b                 
+       ∞       o ø   —ø  —ê   ≤  ≤   H   í/   è   ∞    ≤   ≤  Iq —≤  .”'ø  ——ë¬ˇˇˇè
+   ù0 `P+P(-0 `P&fPò `P/P$ˇˇˇÙ`Pó P   ¿             C   l   l   1                        ∞       ±  %o ø   —≤   J   —∞    ≤   q —ù0 `P/P(	`P+`P*P$P        Æ                       ø   —±  H   H   ø  —ø  —ê   ≤  ≤  H   íq   è   ± ”H   ÷≤  ≤  IH   o î   è
+   —≤  ≤  IH   è   í   è   ≤   .”'ø   ——è   ≤  .”'ø  ——ëÄˇˇˇè   ≤   öù0 `P6 `Pí 0 `P&fPò `Pò P´ '`Pí ˇˇˇÃ`Pó @`P$Q             Ö   x  h  u                B      ∞    ∞    ±  o    o ø   —≤   î"   è   —≤   ”H   ÷   o ø  è   íD   è   ∞   ”H   ÷≤   ±  ≤  ≤   ”H   ÷   o o í   è    öè   ± ï/   è   —∞	   H
+   ï   è   —∞
+    o  H   è   æ —∞    ±  o ø  —Ÿê   ∞    ≤     o íè   è   ∞    ≤     o íF   è    ≤  H      í   è#    öè#   ∞   ”H   ÷≤  ±  q —æ —è&   ≤  H   ø  —≤  ì   è(    öè(   ë]ˇˇˇè(   ≤  H   H   ø  —± íF   è+   ≤  ≤  H   J   —≤  H   î   è0   —≤  ”H   ÷o  è2   —è2   ≤  H      í.   è5   ≤  H   H   J   —∞       q —è:   h   ”H   ÷≤  H   o í   è>   ∞       q —è@   ∞    ≤  q —ù0 `P/
+P(ˇˇˇˇP8 `Pü Pñ `Pì ï 	P#ˇˇˇÈP-6`P1 Ä ±F `P.ú Pë0 `P)	P(!fP/P.`P/P-"`Pô `P!Ä G&ˇˇ˛¡`Pì P$`P*`P.`P.`P!Ä  ¸ê ˇˇˇ`Pì `P-`P$ê `Pü P.`Pô `Pï `P+P)`Pï P-`P+P)`P*P$P  x         ‡   ®   |  l  …               ,      –ø  —≤  H   ì   è    öè   ±  H   î0   è   —∞   ï   è   —∞   H   ≤  H   è   íR  è   ∞   í   è   ∞   H   ë   è   è   ø   —∞       ∞    ≤     o o ø  —∞   ø  —ø  —ê   ≤  ≤  H	   í∆   è   ≤  ≤  Iø  —≤  H   ≤  H   íÑ   è   ≤  í&   è   ≤  ≤   J   —∞
+    ≤  q —è"   ≤  ≤  ï   è$   —≤  ∞   è&   í(   è'   ≤  í   è(   ë'   è(   ø  —è(   ≤  .”'ø  ——ë+ˇˇˇè*   ë   è*   ≠   ≤  º   —è,   ù&`Pì `PA Ä  ¡F  /`Pì ¥0 	`PÆ0 `Pö P#ˇˇˇ˜P8 	`P+0 `P&fPò0 `P.`Pù `P.
+`P.`P*P)`P≠ &`P.
+`P*`PK `P°0 Ä  Ø`Pî P |         À   ⁄   »   »                           ∞       ±  ”H   ÷h      o %   %o ø   —≤   íD   è   ± í#   è	   ≤   H      J	   —ë   è   ≤   ± J	   —è   ù0 `Pü P*ˇˇˇÙP(.`P.`P/`Pû !`Pí P    ê   Ä   ?                       ø   —Ÿê    ±  H   æ  í   è   ≤   .”'ø   ——ëÿˇˇˇè   ≤   öù0 `P&!fPï `Pó `P$Q    ê             -   †   †   m                         ∞    ± o î   è   —± è   íG   è   ∞   ±  ± í   è      ± &%ë   è
+      è
+   %J   —è   ù `P)P° `P¬ 3P  º   º   Ç                       –ø  —∞    ±  o ø   —∞    ≤      o î0   è   —≤   H   ≤   H   %≤   H   H   &è   í   è   ≤  H      J	   —è   ù6 `P)	P(`P/P¬ F`Pô P H   H                           –ø   —≤   H      J   —ù&`Pî P    ¨  å  ›               1       –ø  —≤  ø   —∞    ≤   H   o ø  —≤   ∞   J   —≤   ”H   ÷q  —∞       ≤  o ø  —ø  —ê	   ≤  ≤  H   í]   è   ≤  ≤  I≤  ≤  IH   ”H	   ÷h
+      o J   —≤  ≤  IJ   —≤  .”'ø  ——ëîˇˇˇè   ∞       ≤  o ø  —ø  —ê   ≤  ≤  H   í≤   è   ≤  ≤  I≤  ≤  IH   ”H	   ÷h      o J   —≤  ≤  I   J   —≤  ≤  IH      í   è'   ≤  ≤  IJ   —ë   è)   ≤  ≤  I   J   —è+   ≤  .”'ø  ——ë?ˇˇˇè-   ≤   H   H   ”H   ÷≤  q —ù6 `P9 `P/	P(`P/!`P+P4 `P/P(0 `P&fPò `P®  P)`Pê ˇˇˇø`Pó0 `P/P(0 `P&fPò `P® P)`Pî `Pû `Pö `Pô ˇˇˇm`Pó Ä  ®`Pô P$P   ¨         a   q          Ù   ∆   |   |   K                       –ø   —±  H   ï   è   —±  H   
+è   í   è   ≤   i   J   —è   ù&`P∞ &`Pî P   (   (                               ù     d   d   4                        –ø   —≤   H   ì   è   ≤   H   H   J   —è   ù&`Pì `Pö ,P      ≤                      –ø  —∞       ≤  o ø   —ø  —ê   ≤  ≤   H   íu   è   h   ”H   ÷≤   ≤  IH   o í7   è
+   ≤   ≤  I   ±  ï   è   —   è   %J   —è   ≤  .”'ø  ——ë|ˇˇˇè   ù6 `P/P(0 `P&fPò `Pö 	P-`P≤ ˇˇˇ’`Pó YP          #   â   ‘  ƒ  5                      ∞       o ø   —≤      J   —∞       ≤   o ø  —ø  —ê   ≤  ≤  H   íz   è   ≤  ≤  Iø  —∞       ≤  o ø   —≤   î   è   —∞	    ≤   o ±  è   í   è   ë   è   ≤  .”'ø  ——ëwˇˇˇè   ≤  ≤  H   í0   è   ≤  H
+   ±  J   —≤  H
+   ”H   ÷q  —è   ∞       ≤  o ”H   ÷q  —öù0 `P+P(`P? `P/P(0 `P&fPò0 `P> `P/P(`Pô Pñ `PJ `Pó@ F`Pò `Pí `Pê P)`P/P*P$`P!Q    ‘         ?   é   h   h   ;                         ±  H   ï   è   —±  H   è   î   è   —±  H   è   öù `P´ &.Q  L   L   "                         ±  H   ï   è   —±  H   è   öù `P† &Q ‘  ‘  N                %       ∞    ±  q —∞    ±  o ø   —≤   H   í   è   ≤   H   ø   —è   ∞    ±  o îN   è
+   —±  H   ï   è   —±  H   
+è   î   è   —∞    ≤      o è   í£   è   ≤   ”H   ÷q  —± í'   è   ≤   H	   ± I”H
+   ÷q  —ëO   è   ≤   H	   H   í   è   ≤   H	   ”H   ÷q  —è    ≤   H	   ”H   ÷q  —è#   ≤   ”H   ÷q  —öè%   öù `P)	P4 `P)	P(`Pì `Pì `P)PŒ 1Pí '`P+P$
+`P-`Pî P.`Pò `Pê P)`Pê P)
+`P+P$`P!&ˇˇˇÙ`P!Q       ©                         ∞    ±  o ¿   —∞    ±  o ï   è   —±  H   è   î9   è   —≥   H      î   è
+   —∞    ≥      o è   í/   è   ≥   H   	   J
+   —∞    i   q —è   ù0 `P)	P)`P)P— 1Pí `Pï `P,
+P)(P   @   @                             ≥   H      J   —ù `Pï P <  <  º                -       ±  H   (ï   è   —±  H   &è   î   è   —∞    ±  o è   í7  è	   ∞    ±  o ø   —±  H   (í   è      ë   è      è   ø  —≤   H   H   ≤  Iø  —≤  î®   è   —∞    ≤     o ï   è   —≤  ≤  Iø  è   în   è   —∞    ≤     o îQ   è   —≤  H	   ∞
+    ≤   H   o Iø  î&   è    —≤  H	   ∞
+    ≤   o Iø  è$   í   è%   ≤  ”H   ÷q  —è'   öè'   ±  H   î   è)   —∞    ±     o è,   í   è-   öè-   öù `P∫ 'Pí0 `P)	P8 	`P≥0 `Pò )`Pû P∫ #P¶ "P¶ 5Pó `P+P)	`P!Y&ˇˇˇ∏`Pì .Pì `P!&ˇˇˇÙ`P!Q  ÿ  ÿ  W               %        –ø  —≤  H   ≤  H   ”H   ÷h      o Iø   —≤   í  è   ∞    ≤  o íÄ   è	   ≤   H   ∞   í:   è   ≤   ≤   H	   J   —≤   ≤   ”H
+   ÷   o J   —è   ≤   ”H   ÷   q —≤      J	   —ëb   è   ≤   H   íO   è   ≤   ≤   H   J	   —≤   H   í'   è   ≤   ”H   ÷   ≤   H   q —è   ∞    7   ≤   :   q —è#   ∞    q  —ù6 `P£ P)"`P.
+`P*P-`Pô `Pì `Pî P. `Pê P$"`Pô0 `Pì `Pì `Pï `Pô P)5`P+	)ˇˇˇ˛P)`P*P  x   x   C                       –ø  —≤  H   H   ø   —≤   H   ±  í   è   ≤   ±  J   —è   ù6 	`Pì #`Pó `Pí P 4  $  Ω         
+              –ø  —∞    ∞    ≤     o o ø   —∞       ≤   o ø  —ø  —ê   ≤  ≤  H   í0   è	   ≤  ≤  I   J   —≤  .”'ø  ——ë¡ˇˇˇè   ∞    ≤  	   o ”H
+   ÷≤   q —≤  i   J   —ù6 `Pï 
+P#ˇˇˇˇP8 `P/P(0 `P&fPò `Pî ˇˇˇ˚`Pó `P/	P.P$`P/P 4         C   D   (   (                               ù     8  8  Æ                 #       ∞   H   í   è   ∞   z’  {  ë;   è   ∞   H   í!   è   ∞   z   ’  { ë   è
+   è
+   ¿   —≥   í6  è   ∞       o ¿   —± íR   è   ≥      ± %   %J	   —≥   ≥   H
+   ”H   ÷h      o J
+   —ë!   è   ≥   ”H
+      %J
+   —è   ≥   ”H   ÷± í   è      ë   è      è   ±  q —± í$   è   ≥   ”H   ÷      q —è   ≥   ”H   ÷      q —≥   i   J   —≥   ”H   ÷± q —è#   ≥   öù0 	`Pû P=ö0I 'P=,.`P? `P+P)`P-	`Pö >`P† *Pì `Pê,!`Pµ P$!`P-`Pñ P)F`Pñ P$6`Pê Ä $`P/P)`P%Q     À                          ≥   H   í∏   è   h   ”H   ÷≥   H   o í   è   ≥    ≥   q —ë|   è   ≥   ≥   H   í   è
+   ≥   H   ë   è      ∞   %   %è   J	   —≥   ≥   H
+   ”H   ÷h      o J
+   —è   ù `Pó `Pñ P-`P+P.`P… i`P† *P.P    `   `   +                        Œ¿   —–¿   —3¿   —∞    ≥   i   o öùï `P ê PD !Q         ø                       Œ¿   —–¿   —3¿   —Ø   H   í(   è   Ø   ”H   ÷≥   H   o ë.   è   Ø       ≥   H   %   %t ⁄n   è   ¿   —≥   \ê   ]^ì/   è   ¿   Ø    ≥   ≥   ≥   Iq ——ëŒˇˇˇè   _ùï0 `P™ P© Pì@`Pò@ YE `Pñ PD UL P          Å   7   ¸  Ï  -                8      d    ø   —±  H   ø  —ø  —ê   ≤  ≤  H   í_  è   ≤  ≤  Iø  —≤  H   î   è   —≤  H   è
+   í  è   h   ”H   ÷≤  H   o î   è   —≤  H   è   í   è   öè   h	   ”H   ÷≤  H   o ï'   è   —≤  H
+   ï   è   —≤  ± è   í|   è   ≤   ”H   ÷∞    ≤  H   o    %∞    ∞    ≤     o í   è#   ∞    ≤  o ë   è%   ≤  H   è&   o %q —è)   ≤  .”'ø  ——ëí˛ˇˇè+   ≤   ”H   ÷   o ø   —±  H   ø  —h   ”H   ÷±  H   o ì<   è2   ≤  ”H   ÷h      o    %≤   %ø  —   ø   —è6   ∞    ≤  i   ≤   ± o öù0 `P: `P-0 `P&fPò0 `P.
+`Pî 	ô `Pï 
+P¶ `P1 Ä F [`Pï #P∫ '`Pö 
+Pû 3Pó Põ ˇˇˇ⁄P$ˇˇˇ€PI `Pó0 Ä `Pê 
+P8 `P-`Pî 	P-`Pï Pì `P/	`Pñ P#Ä  ºQ ¸            s  Ã   Ã   v                         ∞       ±  H   q —∞   H   í7   è   ∞   ”H   ÷∞       ∞	    
+   o o q —è   ∞    ∞	    
+   o q —ù 
+`Pì P$'`Pî `P¢ P#ˇˇˇıP$ˇˇˇÚP)0`Pë P#ˇˇˇˇP$P   t  t                  l       –ø  —≤  ¿   —∞    ±  o ø   —∞    ±  o ï@   è   —∞    ≥   H      o ï   è
+   —∞    ≤      o è   í   è    öè   ± í   è   ∞    ± q —öè   ≥   H   ¿   —± ï   è   —h	   ”H
+   ÷≥   o è   æ —∞   ”H   ÷± í   è      ë   è      è   o ¿   —≥   i   J   —±  H   ø  —≥   H   î   è   —≥   H   H   è   ï*   è   —≥   H   ï   è!   —≥   H   è"   ø  —≥   H   ∞   ”H   ÷≥   H   &o    %J   —± í:   è+   ¿   —≤  ”H   ÷h   i   q —≥   ≥   J   —è.   ∞        ≥   o H!   í   è2   "   ø  —è2   ∞   H#   íî   è5   ∞   H#   ”H$   ÷o  ø  —≤  ”H%   ÷±  H&   ±  H'   q —≤  ”H(   ÷o  ø  —≤  ”H)   ÷≥   q —≤  ”H*   ÷+   ≤  q —≤  H,   H!   ø  —èE   ≥   "   J   —≥   ”H-   ÷≥   q —∞.    ≥   q —≥   ”H/   ÷q  —± íC   èN   ∞0    ∞1   H2   3   %∞4    ≥   H5   o %6   %i7   o öèX   ≥   ≤  J8   —≥   ≥   H5   J9   —≥   ≤  J:   —≥   ≤  J;   —∞   H#   í[   è`   ∞   H#   ”H$   ÷o  ø  —≤  ”H<   ÷=   ≥   H8   H!   ≤  %q —≤  ”H>   ÷q  —èl   öù6 `P: `P)	P(`P)P§ Pù 'Pí `PA
+ vF p`P-	`P)P$
+`PA
+ vF0 	`Pê `Pü P< `P≤ 	P)'`Pê0 `P= `P› @`P• P/"`P= `P'`Pï P$#`Pï `Pê Pí `P/`Pî0 `Pë P(`Põ P4 `P+P(`Pê P$`Pî P$`Pò `Pê `Pë P$`P+P$`P,P$`Pê 	`P¶ P/ˇˇˇÈP3 vF	 Ä j`P/`Pï `P/`P/`Pî0 `Pë P(`Pê ï ˇˇˇÏP$-`P+P)
+`P!Q Ù   Ù   •                         ±  ì   è   ∞   H   æ  —è   ±  H   î@   è   —±  H   î,   è	   —±  H   î   è   —∞    ±  o è   í/   è   ∞   ”H   ÷≥   q —≥   ≥   J	   —è   ù `P-`Pì `Pñ î î )Pì `Pë 
+P$`Pï P    <   <                             ≥   .”'¿   ——ù `P/P    t   t   @                         ±  H   í2   è   ≥   ±  H   J   —≥   ≥   H   J   —è   ù `Pí `Pì !`Pö P ‘   ‘   }                	       –ø   —≤   ¿   —≥   H   ¿   —≥   H   ¿   —≥   ± J   —≥   í4   è   ≥   ”H   ÷   q —∞    ≥   i   o öè	   ù6 `P: `Pê0 `Pê `P.`P/`Pë P$`P ê P4 Ä  ˇV        ƒ                        ∞   ”H   ÷   o ø   —≤   ±  H   J   —∞       o ”H   ÷≤   q —≤   H	   H
+   ≥   í)   è   ≥   H   ”H   ÷≥   q —ë>   è   ≥   ≥   ”H   ÷h   i   o J   —≥   ≥   J   —è   ù0 `Pë 	P(`Pí %`P+P.P$`Pû `Pñ P.`Põ P)/`Pï P  4   4                            ±  %öù `P &Q  p   p   :                         ±  H   í   è   ±  ”H   ÷q  —ë   è   ±  J   —è   ù `Pí `P*P.`P/P  $    û          	             7   :   :   :   \ê   ]^ìw   è   ø   ∞    ≤   ±  o ø  —ø  —ê   ≤  ≤  H   í/   è   ∞    ≤  ≤  Iq —≤  .”'ø  ——ë¬ˇˇˇè   —ëÜˇˇˇè   _ù@ `P%&&	ô@  !D0 `P-P(0 `P&fPò `P/P$ˇˇˇ‚`Pó@  L ?P  $        I   C               î   î   U                  
+       h   ”H   ÷±  H   o ì8   è   ∞    ±     ∞   q —∞    ±     ∞   q —è
+   ù `Pî P-`Pì P$`Pì P)P   |   |   @                        –ø  —∞    ≤  o ø   —≤   í   è   ∞    ≤      q —è   ù6 `P*P(
+`P.`Pê 
+P)P    x   x   ?                        –ø  —∞    ≤  o ø   —≤   í   è   ∞    ≤      q —è   ù6 `P*P(
+`P.`P/
+P)P  h …y6Ü X  „                       ±  H   í   è   ±  H   æ  —è   ±  H   ì   è   öè   ∞       ±  H   o ø   —ø  —ê   ≤  ≤   H   íl   è   ≤   ≤  Iø  —≤  H      î   è   —≤  H   H	   è   í   è   ≤  öè   ≤  .”'ø  ——ëÖˇˇˇè   ù `Pí `Pë `Pí 
+`PA MF 0 `Pì P(0 `P&fPò0 `P.`Pö û `P$F `Pó0 MP    h         ]   Ä   å   å   Q                         ±  H   í$   è   ±  ”H   ÷± ± q —ë$   è   ±  ”H   ÷   ± %± q —è   ù `Pí `Pë P.-`Pñ P)"P  @   @                            ∞    i   q —ù `P,
+P$P    @   @                             ≥   ”H   ÷q  —ù `P,P$P    »  ®                        ±  ”H   ÷o ø   —   ø  —∞    ≤  ±  o ø  —∞    ≤  ≤   o ø  —ø  —ê   ≤  ≤  H   í§   è	   ≤  ≤  Iø  —≤  \ê   ]^ìg   è   ø  h   ”H   ÷≤  o î   è   —≤  ≤  Iè   í"   è   ≤  ≤  I≤  ≤  ≤  IL—è   —ëñˇˇˇè   _≤  .”'ø  ——ëMˇˇˇè   ∞    ≤   q —≤   öù0 `P+P8 	`P: `P-P8 	`P.P(0 `P&fPò0 `PN	`Pó@ D	 `Pê P¶ `Pù@ L `Pó@	 I`P*P$`P$Q  »           o          N   ∏   ¥   ¥   v                        ±  H   ø   —≤   ”H   ÷   o ø  —∞    ≤      ≤   H   î/   è   —≤  î   è   —≤   H   H   ≤  è   q —ù0 `P= 
+`Pê P(`PÃ 
+P$RP    ‘  §  ∫                I      ∞   H   í™  è   ∞      J   —±  íõ  è   ∞   H   \ê	   ]^ìx  è
+   ø   ∞   H   ø  —≤  ≤   I   íƒ   è   ≤  ≤   Iø  —ø   —± í£   è   ø  —ê   ≤  ≤  H   í   è   ≤  ≤  ≤  ≤  I”H   ÷h	   
+   o ”H   ÷h      o ”H   ÷h      o ”H   ÷h      o L—≤  .”'ø  ——ërˇˇˇè!   ≤  ≤   ± í,   è"   ≤  ≤   I”H   ÷h      o ë   è%   ≤  ≤   Iè&   ”H   ÷h      ±  %o ”H   ÷h      ±  %o L——ëÖ˛ˇˇè-   _è-   ∞   H   í   è0   ∞   ∞   J   —è3   ∞   ”H   ÷   q —∞       o ø  —ø  —ê8   ≤  ≤  H   íÅ   è;   h   ”H   ÷≤  ≤  IH   o íC   è@   ∞   ”H   ÷≤  ≤  Io ø  —≤  í   èE   ∞     ≤  q —èG   ≤  .”'ø  ——ëpˇˇˇèI   ù `Pî `Pê B`PM`Pù@  wD0 `P/`P0ö `P.`P&	`P-0 `P&fPò `P¢ Pî Pî &Pî (P%ˇˇˇâ`Pó Ä  ò`PØ P∞ TPò /PE  së@ Ä v`Pî `Pï `Pí P4 `P+P(0 `P&fPò `Pö P= `Pï P(`P.`P*PI `Pó0 FP   ‘        ¢   ì         <   Ä           ï   º   ¨   d                 
+      ø   —ê    ≤   ±  H   íE   è   ±  ≤   IH   ± í   è   ±  ≤   Iöè   ≤   .”'ø   ——ë≠ˇˇˇè
+   ù 0 `P&fPó `Põ `P(&ˇˇˇ”`Pó -P º             X   §   Ñ   O                       $¢±  ± í   è      ë   è      è   J   —ë   è    ú§¶ß   —ß   —ƒè   ù!`Pº -ë P §   î      =      ˇˇˇˇ           4   ¯   Ë   í          	             ∞       ±  o ø   —ø  —ê   ≤  ≤   H   í\   è   ≤   ≤  I∞    ∞   ≤   ≤  I”H   ÷   o ”H   ÷o o J	   —≤  .”'ø  ——ëïˇˇˇè   ù0 `P.P(0 `P&fPò `P© %P+P#ˇˇˇ’P)ˇˇˇÏ`Pó KP ¯             p   ƒ   ƒ   v                        ∞    ±     o H   ø   —h   ”H   ÷∞    ±  o o ø  —∞    ≤   I   ≤  q —≤   I”H	   ÷
+   o I≤  J   —ù0 `P.	P= 	`Pï P#ˇˇˇ˚P(`Pï 
+P$`Pí P/3P   î   î   [                       –ø   —≠   ∞    ±  o º   —∞   ≤   H   I∞   í#   è
+   ∞   ≤   H   ≤   H   L—è   ù&`P.P)`Pü "`Pû "P        æ                        –ø   —∞   í   è   ≤   H      J   —è   ≤   H   ”H   ÷q  —≤   H      J   —∞   î    è   —∞   ≤   H   I∞	   è   í8   è   ≤   ∞   ≤   H   IJ
+   —∞   ≤   H   ∞	   L—è   ù&`P/`Pô `Pê 
+P$	`Pî `P¥ *`Pô !`Pö !P ò   ò   Z                        –ø  —≤  H   ¿   —i    o  ø   —∞       ≤   í   è      ë   è      è   q —ù6 `P? `PF 'P(`P≤ P$P   0     …                W       ∞       ≥   o ø   —ø  —ê   ≤  ≤   H   íh   è   ≤   ≤  IH   î(   è   —h   ”H   ÷≤   ≤  IH   o è   í   è   öè   ≤  .”'ø  ——ëâˇˇˇè   ≥   H   H   ø  —∞    	   ≥   o ø  —ø  —7
+   ø  —ø  —ê   ≤  ≤  H   íp  è   ≤  ≤  Iø  —∞    ≤  o ø  —h   ”H   ÷≤  H   o ø  —≤  íÁ   è   ∞    ≥   ≤  I   %Io ø	  —≥   ≤  I   %IH   ø
+  —≤  ∞   !îT   è*   —h   ”H   ÷≤	  o ï5   è.   —≤	     î    è0   —≤
+  ”H   ÷o    è3   í   è4   öë2   è4   ≤  ï   è5   —≤
+  è5   í   è6   ø  —è6   h   ”H   ÷≤  H   o ø  íß   è:   h   ”H   ÷≤  o í   è=   ø  —è=   ∞    ≥   ≤  I   %Io ø
+  —≤
+  íQ   èC   ≤  ≤  î   èD   —≤     èE   í   èF      ë   èF   ≤
+  èF   L—èG   ≤  î#   èH   —h   ”H   ÷≤  H   o èK   í.   èL   ≤  ∞   !ì   èO   ø  —èO   ë   èO   ≤  .”'ø  ——ëÅ˝ˇˇèQ   ≤  íP   èR   ≤  \êS   ]^ì3   èT   ø  ≤  ∞   !ì   èW   ø  —èW   —ë ˇˇˇèW   _èW   ≤  öù0 `Pê P(0 `P&fPò `P≥ Pí `PA %F `Pó0 `Pî0 `Pê P8 `P6 `P*0 `P&fPò0 `P> `P*P8 `Pï P(`P> `Pò P8 `Pú `PDë ê P∞ Pò `PA %K `P¢ 
+`P+`Pï Pë `Pê 8P-`P; `Pò P(`P.`PÃ )`P§ Pí `PDê `P+
+`PJ `Pó@ $`PN`Pó@ /D `PDê `PK +ë@ `P$
+Q  0            |          ·   Ñ        }  ;   ú   ú   h                         ±  ±    %± %ïP   è   —±  ± ± %ï:   è   —±  ± ± ”H   ÷o ”H   ÷o  %± ”H   ÷o %è   öù 
+`P√ (P*
+P/P*Q  H   H                            ±  ”H   ÷h      o öù `Pî 	P#Q   @    k                )       ∞       o ø   —ø  —ê   ≤  ≤   H   í0   è   ≤   ≤  Ii   J   —≤  .”'ø  ——ë¡ˇˇˇè	   ∞       o ø   —ø  —ê   ≤  ≤   H   íH   è   ∞    ≤   ≤  I7   ∞	   :
+   ∞   :   q —≤  .”'ø  ——ë©ˇˇˇè   ∞       o ø   —ø  —ê   ≤  ≤   H   í\   è   ∞    ≤   ≤  I7   i   :
+   ∞   :   i   :   ∞   :   q —≤  .”'ø  ——ëïˇˇˇè)   ù0 `P+P(0 `P&fPò `Pî ˇˇˇ˚`Pó o`P+P(0 `P&fPò `Pî **ˇˇˇ‹P$ˇˇˇˆ`Pó M`P+P(0 `P&fPò `Pî *0**U*ˇˇˇWP$ˇˇˇˆ`Pó Ä  ŒP @            D          {   \          ı   p   Ñ   Ñ   G                        –ø   —∞   ”H   ÷≤   q —≤   H   ì   è   ∞   ”H   ÷≤   q —è   ù&`Pê P$`Pì `Pê P)P    L   L                           –ø   —≠   ∞    ≤   o º   —ù&`P/	P)P  d   d   0                       –ø   —∞   ”H   ÷≤   ±  ∞    ±  o H   q —ù&`Pú P)ˇˇˇP$)P  ∏  ∏                   0       ∞    ±  o ø   —∞    ≤      o ìL   è   ∞    ≤      o ø   —≤   î   è   —∞       ≤   o è
+   ø   —è
+   ≤   íÇ  è   ≤   H   ø  —h   ”H	   ÷≤  o í$   è   ∞
+   ”H   ÷≤   q —ë1  è   h   ”H	   ÷≤  o í$   è   ∞   ”H   ÷≤   q —ëı   è   h   ”H	   ÷≤  o í#   è   ∞   ”H   ÷≤   q —ë∫   è   h   ”H	   ÷≤  o í(   è!   ∞   ”H   ÷≤      q —ëz   è$   ≤     í_   è&   ≤   H      ≤   H   %   %Iø  —≤  H   ì(   è-   ≤     J   —≤  ”H   ÷q  —è0    öè0   öè0   ù0 `P)	P(`P/P-`P/P(`Pû Pí `P> `P.`Pê 	P-`Pë P> `Pê P-`Pë P> `Pê 
+P-`Pê P> `Pê P-`Pï P.%`Pî0 `P§ *`Pì `P/`P+P)`P!&ˇˇˇÚ`P!V Ñ   Ñ   I                        ∞    ±  o ø   —h   ”H   ÷≤   H   o í   è   ≤   H   J   —è   ù0 `P)	P(`Pï P-`Pï !P  –  ∞                  >       –ø  —≤  H   ”H   ÷≤  H   H   &o ø   —∞    ≤  H   ≤      %o ø  —≤  H   ø  —≤  H   ø  —≤  H   ø  —ê   ≤  .”(ø  —í  è   h	   ”H
+   ÷≤  ≤  IH   o ø  —≤  ìå   è   ≤  îc   è   —≤  ≤  H   &îG   è   —≤  ≤  ≤  IH   ”H   ÷h      o î   è    —≤      è!   í   è"    öè"   ëP  è"   ≤  Iø  —≤  Iø  —d   ≤  e    ≤  ”H   ÷h      o e   ≤  ”H   ÷h      o e   ø	  —ø
+  —ê)   ≤
+  ≤	  H   íæ   è,   ≤	  ≤
+  Iø  —≤  ≤  ïT   è/   —≤  ≤  ï@   è1   —∞    ≤  ≤  ≤  o ï    è4   —∞    ≤  ≤  ≤  o è6   í-   è7   ≤  í   è8    öè8   ≤  ø  —ë   è8   ≤
+  .”'ø
+  ——ë3ˇˇˇè:   ëÏ˝ˇˇè:   ≤  í'   è;   ≤  ≤  J   —≤  ”H   ÷q  —è>   ù6 `P¢ 
+P8 `Pô 	P8 `P>0 `P.0 `P.fPñ0 `Pö P(`P.`PŒ 8P® &`PA Ä  F Ä  ö`P: `P; `P< `P%)ï P(ï P-0 `P&fPò `P.`P∫ P† "Pí %`P.`P!Y&ˇˇˇØ`P)`P*ˇˇˇi`P° Ä  £`P.`P.`P+P)P  –         ∏  “          {     p  P  L     	          `      –ø  —h   ”H   ÷≤  H   o ø   —≤   I≤   Ií*   è   ∞   ”H   ÷≤   IH   o ë   è   ∞   è   %   %ø  —∞    ≤  	   o ø  —∞
+    ≤  o ø  —∞       ≤  o ø  —∞       ≤  o ø  —ø  —ê   ≤  ≤  H   íi   è   ≤  ≤  I≤  ≤  IH   ”H   ÷h   ≤  o J   —≤  ≤  I≤  ≤  IH   J   —≤  .”'ø  ——ëàˇˇˇè%   ∞       ≤  o ø  —∞       ≤  o ø  —≤  Iø  —ø  —ê*   ≤  ≤  H   í  è-   ≤  ≤  IH      í-   è1   ≤  ≤  I≤  J   —≤  ≤  IJ   —è5   ≤  ≤  I≤  ≤  IH   ”H   ÷h   ≤  o J   —h   ”H   ÷≤  ≤  IH   o í   è@   ≤  ≤  I   J   —èB   h   ”H   ÷≤  ≤  IH   o í   èG   ≤  ≤  IJ   —èI   ≤  .”'ø  ——ë„˛ˇˇèK   ≤  I∞   J   —≤  H   ”H   ÷≤  ≤  H   q —±  í(   èS   ≤  ∞   J   —≤  ”H   ÷q  —èW   ≠   ∞      %º   —≠    ∞    .”'◊÷º    ——öù6 `Pï P8 `PØ P£0 `P/	P8 `P*	P8 `P/P8 `P/P(0 `P&fPò `Pß P)`Pù ˇˇˇÀ`Pó c`P/P(`P/P8 `P+0 `P&fPò `Pû $`Pì `Pï `Pß P)`Pö !P-`Pô `Pö P-`Pï ˇˇˇ`Pó Ä `Pë "`Pù P$&`P-`P/ `P+P)	`P'`Pó `P!Q   p         “   }          ì  "  ¿   ¿   u         	              –ø  —∞    ≤  H   ≤  H   ”H   ÷h   ±  o o ø   —≤   H   ”H   ÷≤   q —∞    ≤  	   o H
+      J   —öù6 `Pß P#ˇˇˇÎP(1`Pî P$`P/	Pì !`P!Q          ±                       –ø  —∞    ≤     o ø   —   ≤   !ì   è   öè   ≤   H   ”H   ÷≤   ±  í   è   ≤   H   ëC   è   ≤   H   í   è
+   ≤   H   H   ë   è   ≤   H   H   è   q —öù6 `P/	P(`P5/`P!Ä  ¥&ˇˇˇY`PÚ P$Ä  ã`P!Q   0     1               ^       –ø  —≤  ø   —≤   H   ”H   ÷≤   H   H   &o ø  —∞    ≤   o ø  —ø  —ê   ≤  ≤   H   H   H   í≤  è   ≤   H   H   ≤  Iø  —≤  H   ≤     %íπ   è   h   ”H	   ÷∞
+   o î   è   —h   ”H	   ÷≤  o è   ï=   è   —h   ”H	   ÷∞
+   o î   è   —h   ”H	   ÷≤  o è!   ì   è"   ≤     J   —è#   ≤  H   ”H   ÷≤  q —è&   ∞
+      îZ   è)   —≤  H   ≤     %î;   è-   —h   ”H	   ÷∞    ≤   H   ≤     %o H   o è4   í   è5   ≤  J   —è6   ≤  H   ≤     %í1   è:   ∞    ≤     h   ”H	   ÷≤  o q —è?   ≤  H   ≤     %í1   èC   ∞    ≤     h   ”H	   ÷≤  o q —èH   ≤  H   ≤     %í1   èL   ∞    ≤     h   ”H	   ÷≤  o q —èQ   ≤  H   ≤      %í1   èU   ∞    ≤     h!   ”H	   ÷≤  o q —èZ   ≤  .”'ø  ——ë5˝ˇˇè\   ∞"    q  —ù6 `P9 `P¢ 
+P8 `P*P(0 `P&fP¢0 `Pò `Pû `Pë Pû !P§ Pû Pí `Pî `Pî P)`P⁄ HP(ˇˇˇ˚Pí 3`Pê `Pû `P/ê P$ˇˇˇ⁄P)6`Pû `P/ê =P$ˇˇˇ∂P)Z`Pû `P/ê P$ˇˇˇ›P)3`Pû `P/ê P$ˇˇˇÓPI  `Pó0 Ä Â`P*P 0         Q   –  †   †   d         
+               –ø   —∞    ≤      ≤   H   H   î6   è   —h   ”H   ÷∞    ≤   H   H	   H
+   o o è   q —ù&`P/ø -P#ˇˇˇ˚P(ˇˇˇ«P$xP  $  $  √                        –ø  —≤  H   ø   —h   ”H   ÷∞    ≤   H   H   o o íÉ   è   ∞       o ø  —≤  ∞	    ≤  H
+   o J
+   —≤   ”H   ÷≤  q —≤  H      J   —≤  H      J   —≤  ”H   ÷q  —è   ù6 `P.`P† P#ˇˇˇ˚P= `P+P(`Pì P)`P/P$`Pî `Pî `P+P)	P  d  T  È          
+             h   ø   —d    ø  —ø  —Ÿê   ≤   ”H   ÷±  o ø  íp   è   ≤  ≤  H   í   è   ëN   è   ≤  ”H   ÷≤  I”H   ÷h      o q —≤  ≤  IH   %ø  —ëzˇˇˇè   ≤  ±  H   í"   è   ≤  ”H	   ÷
+   o ë   è   ±  è   öù0 `P: `P: `P6 !fP.	Pë `Pò `P*`P£ P#ˇˇˇÚP$-`Pê `Pß Pï Q   d            ã   L  L  ˘         	               –ø  —≤  H   H   ø   —≤  H   ø  —≤   h   ”H   ÷≤  o í   è   ≤  ëy   è   ≤  îk   è   —   ≤  ”H   ÷h   	   o ”H   ÷h
+      o ”H   ÷h      o ”H   ÷h      o %   %è   J   —≤   H      J   —≤  H      J   —ù6 `Pì0 `P.`Pî Pƒ Pî Pî Pî Pï `Pî `Pî P ¯   Ë   ã          	             ∞       ∞       o o ø   —ø  —ê   ≤  ≤   H   íJ   è   ∞    ∞       ≤   ≤  Io ± I   ±  q —≤  .”'ø  ——ëßˇˇˇè   ù0 `Pñ 	P#ˇˇˇ˙P(0 `P&fPò `Pö P,"$ˇˇˇ›P$ˇˇˇÒ`Pó =P  ¯          '   ^   ‰   ‰   è                        –ø  —h   ”H   ÷∞    ≤  o o ø   —∞    ≤  H   H      ≤   ï   è   —≤  H   è
+   q —∞    ∞	    
+   o    ≤   q —∞    q  —ù6 `Pñ P#ˇˇˇ˚P(`P® </ˇˇˇŒP$G`Pë P( %ˇˇˇﬂP$2`P*P ∏   ∏   p                        –ø  —∞    ∞    ≤     o o ø   —≤   H   H      J   —∞    ≤     o ”H   ÷≤   q —≤  i	   J
+   —ù6 `Pï 
+P#ˇˇˇˇP(`Pô #`P/	P.P$`P/P  (   (                               ù     »   »   |                        ±  H   H   ø   —∞    ±  H   q —∞    ≤      ±  H   q —± î   è
+   —±  H   è   í   è   ≤   ”H   ÷q  —è   ù0 `Pí `Pê 
+P$`P/)ˇˇˇÓP$"`P• `P+P)	P        ¢                        ∞    ∞    ±  o    o ø   —≤   íy   è   ∞       ≤   o ø   —h   ”H   ÷≤   H   o ø  —≤  í7   è   ∞	   ”H
+   ÷≤   ±  q —∞       ≤  I%q —è   ù0 `P/
+P(ˇˇˇˇP(`P.`P/P8 `Pï P(`P.`Pì P$`Pí P)P    l  \  Í         
+              –ø  —∞    ∞    ≤     o o ø   —≤  i   J   —∞       ≤   o ø  —ø  —ê   ≤  ≤  H   í]   è
+   ≤  ≤  I≤  ≤  IH	   ”H
+   ÷h      o J	   —≤  ≤  IJ   —≤  .”'ø  ——ëîˇˇˇè   ∞    ≤     o ”H   ÷≤   q —ù6 `Pï 
+P#ˇˇˇˇP(`P? `P/P(0 `P&fPò `P®  P)`Pê ˇˇˇ«`Pó U`P/	P.P$P    l         R   q   (   (                               ù     <    Å               '       –ø  —∞    ∞    ≤     o o ø   —≤  i   J   —∞       ≤   o ø  —ø  —ê   ≤  ≤  H   í]   è
+   ≤  ≤  I≤  ≤  IH	   ”H
+   ÷h      o J	   —≤  ≤  IJ   —≤  .”'ø  ——ëîˇˇˇè   ∞       ≤   o ø  —ø  —ê   ≤  ≤  H   ía   è   ≤  ≤  I≤  ≤  IH	   ”H
+   ÷h      o J	   —≤  ≤  I   J   —≤  .”'ø  ——ëêˇˇˇè#   ∞    ≤     o ”H   ÷≤   q —ù6 `Pï 
+P#ˇˇˇˇP(`P? `P/P(0 `P&fPò `P®  P)`Pê ˇˇˇΩ`Pó0 `P/P(0 `P&fPò `P® P)`Pî ˇˇˇø`Pó U`P/	P.P$P    <         R   q          Â   u   (   (                               ù     ¸  ‹  L               #      –ø  —d    ø   —7   :   :   \ê   ]^ì◊   è   ø  ∞    ≤  ∞    ≤     o o ø  —ø  —ê
+   ≤  ≤  H   íÄ   è   h   ”H	   ÷≤  ≤  IH
+   o íB   è   ∞    ≤  ≤  Io ø  —≤  í   è   ≤   ”H   ÷≤  q —è   ≤  .”'ø  ——ëqˇˇˇè   —ë&ˇˇˇè   _≤  H   ≤  H
+   ”H   ÷h      o I±  ≤   ”H   ÷   o %J   —ù6 `PJ `P%&ô@ D0 `Pô P#ˇˇˇ˚P(0 `P&fPò `Pö P= `P/P(`P.`P/PI `Pó@ 	L >`P£ Pó .P*
+P   ¸        b   î         "   ﬂ   |  L  w               @      –ø  —≤  ø   —≤   H   ≤   H   ”H   ÷h      o Iø  —≤  H   ìÖ   è   Ÿê   ∞    ≤  o    î#   è   —≤  H   ≤  H	   H
+   è   í%   è   ≤  ”H   .”ÿ'J   ——ëüˇˇˇè   ≤  ”H   ÷q  —è   ∞    ≤   H   o ø  —∞       ≤  o ø  —ø  —ê   ≤  ≤  H
+   í\   è   ≤  ≤  Iø  —≤  ≤  H   ”H   ÷h      o J   —≤  J   —≤  .”'ø  ——ëïˇˇˇè&   ≤   ∞    ∞   ±  o J   —∞       ≤  o ø  —ø  —ê,   ≤  ≤  H
+   í~   è/   ≤  ≤  Iø  —≤  ≤  H   ”H   ÷h      o J   —≤  H      í   è7   ≤     J   —è8   ≤  .”'ø  ——ësˇˇˇè:   ∞    ≤      o ”H   ÷≤  q —≤   ”H   ÷q  —ù6 `P9 `P£ P)`Pì !fP*Pª ?`P† `P+P9 `P/	P8 `P/P(0 `P&fPò `P.`Pû P)`P+ˇˇˇ∏`Pó ``Pí P9 `P/P(0 `P&fPò0 `P.
+`Pû P)`Pô `Pî@ `Pó0 k`P/	P.P$`P+P$P    |         O   f            p          Ø  í   4  4  ˙                         ∞    ±  H   H   o H   –í’   è   ±  ±    %∞    ±  H   H   o %±  H   H   í#   è      ±  H   H   %ë   è      è   %±  H	   H
+   í   è      ë   è      è   %±  H   H
+   í   è      ë   è      è   %J   —è   ù `Pì Pñ "`Pü P†0ˇí ~P     π                        ∞    ± H   o ø   —±  ”H   ÷± H   H   o íX   è   ± H   ±    %∞    ± H   o ”H   ÷o ≤   ”H   ÷o %”H	   ÷o  %J   —è   ∞
+    ± H      h   ”H   ÷≤   o q —ù0 
+`P.P(`Pó P-`Pü !P+P/P+P/`Pì ê P$ˇˇˇ‰P$-P Ã   Ã   í                       –ø   —±  H   í   è   ±  H   ë   è   ±  H   è   íS   è   ≠   ≤   º   —≠   ±  H   ≤   H   &º   —≠   ±  H   ≤   H	   &º   —è   ù&`PΩ *`P/
+`Pù  `P¢  P   à  x  Z                ó      ∞   ∞   íI  è   ±  H   ∞   &∞   *ø   —±  H   ∞   &∞   *ø  —∞    	   ∞   o ø  —7
+   ø  —ø  —ê   ≤  ≤  H   íò  è   ≤  ≤  IH      íc  è   ∞       h   ”H   ÷≤  ≤  IH   o í   è      ë   è      è   %≤  ≤  IH   ”H   ÷o %   %o ø  —∞   ≤  ≤  IH   Ií#   è,   ∞   ≤  ≤  IH   Ië.   è0   d   ≤  H   H   ∞   *e    e   è5   ø  —ˇø  —≤  ≤  IH   ”H   ÷h      o ø  —≤  ≤  IH   ≤  H   í‹   è>   ∞   ”H   ÷≤  I≤   &o &ø  —≤  ≤  IH    ≤     %J!   —≤  ≤  I”H"   ÷	   o H    ≤     %J#   —∞   ”H   ÷≤   ≤  I&o &ø	  —≤  H    ≤	     %J!   —≤  ”H"   ÷	   o H    ≤	     %J#   —è^   ≤  ≤  IìJ  è`   ∞       ≤  ≤  IH   ”H   ÷h$   %   o %   %o ø
+  —≤  ≤  ≤  IH   ∞   *%ø  —≤  ≤  H   ∞   *%ø  —≤  ≤  IH   ≤  H   í[   èv   ≤  ≤  I≤  &%ø  —≤
+  ”H"   ÷	   o H    ∞   ”H&   ÷≤  ≤  &o    %J'   —èÇ   ≤
+  H    ≤   ≤  %   %J!   —≤
+  H    ∞   ”H   ÷≤  ≤  o    %J(   —≤  ≤  L—èç   ≤  .”'ø  ——ëY¸ˇˇèè   ∞   H    ≤      %J!   —∞   H    ≤     %J(   —èó   ù `Pï0 `Pô0 `Pô0 `Pê P8 `P*0 `P&fPò `Pû0 `P• Pæ +P*ˇˇˇ√P8 `P¡ 1ô ê0 `P7 `Pü P( `P¢ %`Pò P*`Pû `Pï P(!ë0 `Pò P*`Pô `Pê P(!ñ `Pì0 `P™ P*ˇˇˇÏP8 `Pû0 `Pô `P¢ %`P&`Pê Pù 'Pî `Pû "`Pù P/`Pê@ `Pó@ Ä  Û`Pö `Pü P    à         o   ¨  0     ò                B      ∞   ∞   íá  è   ∞   ∞   H   H   H   H   d   ±  H   ∞   &∞   *e    ±  H	   ∞
+   &∞   *e   L—≠   ∞   º   —   ø   —∞   \ê   ]^ì|   è   ø  ≤      ≤  %   %∞   ”H   ÷∞   ≤  II')o '*%
+   %∞   ”H   ÷∞   ≤  II')o '*%%ø   ——ëÅˇˇˇè2   _∞    ≤   ”H   ÷o o ø   —∞       o ø  —≤  ≤  H   ”H   ÷h      o ≤   %J   —∞       ± %   %≤   %q —èB   ù `Pï `P£ 7ô õ `Pê0 `PJ`Pò@ 	D 
+`P∞ P™ -PF L p`Pí P#ˇˇˇÎP8 `P+P(`Pû P.`Pú P)!P  0        å   Ñ   @  @  √        	       6       –ø  —∞    ±  o ø   —± ì   è   ∞    q  —ëè  è   ∞   H   î%   è   —∞   ï   è   —≤  ≤   è   íQ  è   ≠   º   —∞       o ø  —≤  ± J	   —∞   ”H
+   ÷d   ≤  e    q —∞    ≤     q —≤   ”H   ÷o  ø  —∞   H   ø  —≤  H   ≤  H   ≤  H   %± í%   è!   ≤  H   ≤   H   &*ë   è%   ≤  H   è&   &   %J   —≤  H   ≤  H   ≤  H   %± í   è.   ≤  H   ë    è/   ≤  H   ≤   H   &*è3   &   %J   —è6   ù6 `P)	P(`P-`Pî0 `Pï © `P< `P+P(
+`P-`Pë )ˇˇˇÒP$`P/
+P4 `P+P8 `P/`P‰ q`PÈ rP    |   |   A                	       –ø   —≠   º   —≠   ≤   ∞    ±  o º   —∞    i   » q —ù&`P,`Pí P*`P.
+P$.P    L   L                             ∞   ì   è   ∞    q  —è   ù `P/`P/P T   T                             ∞    ∞       o    q —ù `Pë P)ˇˇˇˇP$P   3ıÿ  `      `       `      `     `     
+    p  `     `       p  `	  `  S        Ç    r   
+  `ú #      r     `              `  `2  3     PÅ   5    6  7  8    p9    `       "  !  $  #  %  &  ÿ '  °  )  (  +  *  ,  -  .  0  /      pú :  ;    `>  ‡  @  A     @B  C    `  F  G  i  ß  H    `D  J    `I  [   L  M  N  O    `Q  r   (  S    PS  )  ú #    Â   J     ¿  U  0  V    `M  Y     ß  '  L  K    `  [     K    `ú #  L  K    `M  Y     ß  '  L    `I  `  M a  b  c  /   d  ,  e  f  D  [ g  ¿  h  i  J  j  L  O  '  k  M  N  \  l    Pß  n  K    `'  p  o  L    Â   I  q     K    `ú t  S    Pv  w  J  r   x    `{    `Û     Ä  r   }    ``  D  Ç  É  Ñ  J  °  Ü  Ö    `°  à  Ö    `å  J  é  ç    =     '  S    Pë  >  Â     Pr     ¿  h  L  ‡  ;  !  `   `ì  !  pî  "  `‡  J  j  >  #  `  ò       Pß    ô  r   $  `ú õ  r       ù     û  <  j  ‡  ç  ü  †  %  `¢  £  §  &  `¶  •  '  `®  `  ©  °  ì  D  ™  ´  M  _  ¨  U  †  )  `M  r   ¶  (  ``  °  p  ¿  U  D  Â   M  Æ  ¶  Ø  )  p*  `ì  °  `  ≤  {  J  D  [ ≥  y  †  p  ¶  ¥  +  `M  '  S    P∑  <  ∏  ˝  ¿  a  ∫  π  ª  C  º  Ω    @¶  æ  ,  `{  j  >  .  `-  `å  I  [   Â      r   ‡  q  ;  .  pΩ  0  `’  	  Pß  õ  ◊  ÿ  Ÿ  À  x    S  
+  Pr   /  `,  ≈  ∆  «  ú …     À  x    S    Pr   Ã  Õ  Œ  œ  –  —  “  ”  0  p‘  ⁄  2  `,  
+  ‹  ◊  Ä   (  )  Q  1  `7  2  p4  `Q  Â  ◊  ,  Ê  Á    Ë  ú …  È  3  `Y     '  V    Pß  ¿  ‡    PL  ‡  u   =  D  =  <  ˙   &  ·    P„  S    Pr   ?  7  4  p6  `,  1  ì  p  §  °  Ò     x  7  `8  `◊  ‡  ç '  5  ``  °  D  j  Î  a  Ï  x    Pß    "  Ô  Â   6  p  Ú  Û  Ù  ı  °    ˆ  ˜  a (  S    P7  p¯    i     r   ˘  ˚  ¸  ˝  ˛       C  ;   †  7    }  &  u   ç =  8  p‡  '      =  ;  `:  `  "   ◊  x  ú  ;      J   S    P;  p}  9  `x  }  ª  7  :  p<  `  =  `  @Â   =  Ô        >  `  Pß  ¿   †   ´  Ò  ?  `   X   @  `   X   A  `©  M    Â      ¿  U  °   B  `.    D  `†  C  `Ø  D  pE  `å          Pß   F  `,  Ê  ) ( *       S    P/    P.   P0   P2   P4   P6   P8 9 : Á  Ë    Ô    Pß     G  `   '  H  `C  A ¿  I  `J  `  B        a  }  C O  K  `I  q  ¯    Pß  <      H Â   V  L  `I °  J '  ˝  ‡  M  `I M  Æ  ¶  U  r   J '  ˝  ‡  O  `  Â      ‡    Pß  '  
+ =    @<    PÅ   Q S T   PV W %     P!  PZ L   r   "  PN  `M  O  pQ  \ r   !  P  `_  W ` C Q  `S  #  Pb S  `e /   f g T  `m <  U  `p /   `  ‡  R  `  d    S  pΩ  h     @j i k l   @T  pn ç  U  po r q V  ``  D  Â   I  ˝   ú '  $  Pß  g /   %  Pv &  P'  Py z { M  | ‡  } ç Ω  W  ``  (  Pß  '  {  L  X  `'  C    > M  Ä @  ‡  )  PÅ   S  *  Pr   Ö +  P,  P_ >  ç  Y  `-  PÅ   '  ] C    1  I  [ å    =  S  .  P>  Â   { ‡  L  /  P0  Pß  r   1  Pe Ω  J  è ≤  †  0  ^ Z  `> M  '  S  2  PJ   I  [ °  0  /  [  `I  [ ë J  è í j  \  `'  C    <  M  Y  ì 3  Pß  m 4  P5  P6  Pr   ‡  Ω     ´  ñ 7  P> ó L  ò     8  Pö 9  Pú :  Pû ;  Pæ  ]  `  ü ‡     <  Pß  <  J  {  j  ^  `J  =  Pß  <  {  j  ú ¢ £ ‡  ;  °  0  /  § †  _  `>  PÅ   ’   ‡  S  ?  Pß    ˙   
+  `  `J  j  ‡  @  Pß  '  S  A  Pr   B  P´ C  P¨ D  P≠ °  § /  0  a  `  [ ú Ø      M   b  `E  Pß  <    M  ≥   >  ú ¥ æ  d  `c  `å  I  [ j  r   ‡  q  ;  d  pΩ  e  `M  ∏ Æ L      †  f  `I  `  ˝   ú Â   F  PÅ   '  i  /   \  ª h  `g  `å  I  [ h  pç    =     '  S  G  Pæ >  q  ;  j  `i  `å  I  [ j  pç    =     '  S  H  Pë  >  Â   I  Pr   ‡  q  ;  k  `  @=  Â     I  M    J  Pß  '  <  ‡  M  S  K  P∆ ˙   _  ‡  l  `M  '  S  L  P» >  <  … @     ç  å  J    =  M  Pë    ¡ Â   N  P¿  h  r   ‡  I  M ;  m  `u   Õ ‡     Œ 
+ œ r   – L  — “ ” ·  n  `<  ◊ ß  ÿ ‡  _  Ÿ W ⁄   è   O  Po  `ﬁ ß  ‹ x  ˝  É  y  ˛  ﬂ p  `‹ ˝  ˝  x  ñ ˛  y    ù    @     ‰ ú t  P  Pß  ç Á Ë C w  Í  J  ﬂ S  Q  PÅ   Ì °  ·   (  R  P Û *  ‚ q  `‹ ˝  Í j  5  ˛  y  ñ ˝  x  r   _  :    ı u   C ú ˜ }  S  S  P  ˘ =  r  ``  æ  ,  Ê  ˚ ˙ ú ˛ x  Á           °   ‚  a  · Ñ  t  `˙ æ  s  `˙ ˚ `  Ø  t  pu  `  ú ˛   v  `¶  a  ∫    $ ‡        `  p  p  p  p  p  p	  p
+  p  p  p  p  p  p  p  p  p  p  p  p  p  p  p  p  p  p  p  p   p"  p#  p$  p%  p&  p'  p(  p*  p+  p,  p-  p/  p1  p3  p5  p9  p<  p=  p>  p?  p@  pA  pB  pC  pE  pG  pH  pI  pJ  pK  pL  pM  pN  pP  pQ  pR  pV  pW  pX  pY  pZ  p[  p\  p]  p^  p_  p`  pa  pb  pc  pe  pf  pg  pi  pk  pl  pm  pn  po  pp  pq  pr  ps  pu  pΩ  F  pJ   @] .  m r   ˇXÑ¸  e                     ú     †              †              †              †  	           †             †             †             †     	         †               †  &            †  :            †  .           † -      	     † U      <      †  ]      D      †  d      I      †  g      K      †  o      P      †  Å      W      †  â      Z      †  é      \      †  ì      ]      †  ö       ^      †  ∫      i      †  ≈   
+   Q      †  œ      y      †  —      |      †  ◊   
+   Å      †  ·      á      †  Â      â      †  ¸      í      †  ˚      
+     †       ï      †    	   ñ      †       ö      †       °      †  !     `      †  $     ¶      †  6     ≠      †  2          † C     ∞      †  R     µ      †  f     ø      †  k     ¬      †  j          † Ü     7      †  x          † ®     €      †  ü  	        † ∑     ›      †  ´          † „  ?   c      †  ”  
+        † ›          † ﬁ          † 4     	     †  #          † "          † :     ®      †  =          †  E  	        †  N          †  R     Ò      †  V  
+        †  `          †  f     †      †  d          † i     å      †  Ù     Ω      †
+ q  !   %     †  í     >     †  ï     ?     †  ö  
+   È      †  §     D     †  ∞     K     †  ∑     L     †  ›     é      †  ¬          † ‰     _     †  È     a     †  ˙     c     †  Ì          † Ú     i     †
+ ı     o     †
+      s     †  (     ~     †  /     e     †  C  !   g     †  d     y     †  q     v     †  y  #   n     †  ú     k     †  ß     j     †  ∏     £     †  √     ®     †  ◊  	   Æ     †  ‡     ∞     †  Ì     µ     †  Ï          † ¯     ∂     †        π     †       º     †            †      ø     †            † 3     ¡     †  G     «     †  d     À     †  s     ‘     †  Å  
+   ›     †  ã  )   ‡     †  ¥     Ù     †  Œ     p     †  È     r     †  Ê          † Ô     æ      †  ùH©¿      úk      úk                      Q       Q                  ]   ®   Q   ®                  ¥   ˝   ®   ˝                Ä  p  ˝   p                O  n  G  n     9           ÄÉ  Ï  p  Ï     
+           º  Í  ¥  Í  	   0            ˙  ;  Ï  ;  
+               N  ’  ;  ’     
+            ‰  ;  ’  ;                 J  ∏  ;  ∏               ÄŒ  R  ∏  R                Q  %  I  %     M               ˘       x             f     R                    .  |     |                 é  Œ  |  Œ     	            ﬁ  p  Œ  p                 Ñ  •	  p  •	                ∑	  K
+  •	  K
+  $   	            ^
+  Œ
+  K
+  Œ
+  '   
+             ‚
+    Œ
+    *               +  …    …  ,               ‹  ã  …  ã  0   
+           ±  t  õ  t  5               Ñ    t    ;               #  b    b  =               t  À  b  À  ?   	           ‹  i  À  i  @              y  ò  i  ò  B               ≠  ª  ò  ª  C              ◊  %  ª  %  J                 "    "  J   Z            @  Ä  %  Ä  K               î  0  Ä  0  L               E    0    O               é  À    À  U               ›    À    V   	               ù    ù  W             ÄØ  t  ù  t  Y   	            T  n  L  n  Z   ô             ã  V  t  V  [              m  )  V  )  _               >  ≥  )  ≥  b             «  á  ≥  á  d                Å  Ö  y  Ö  g   k           Äî  #  á  #  h               Í!  Í"  ‚!  Í"  l   ≠          Ç.##  ’#  #  ’#  m             É.A#  “#  9#  “#  m   )           Ê#  ã&  ’#  ã&  r               ﬂ%  {&  ◊%  {&  w   t          Çü&  O,  ã&  O,  x               ‰'  Ä(  ‹'  Ä(  |   N            L)  W)  D)  W)     #             +  g+  +  g+  Å            Çf,  .  O,  .  É              ˜,  .  Ô,  .  Ü   \            ’-  Î-  Õ-  Î-  á   –            .  q.  .  q.  à   	            é.  '/  q.  '/  â               I/  ¡/  '/  ¡/  é              ‘/  )0  ¡/  )0  è   
+            ;0  ã0  )0  ã0  ë   	             •0  1  ã0  1  ì               ê1  2  1  2  ó             Ä 2  L2  2  L2  ò               82  G2  02  G2  ò                ^2  ç3  L2  ç3  ô   	            ù3  N4  ï3  N4  ¢               `4  ©7  O4  ©7  •               ª7  8  ©7  8  Ø   	            $8  e8  8  e8  ±               {8  ˇ8  e8  ˇ8  ≤               9  ”9  ˇ8  ”9  µ              :  i:  9  i:  ∫              z:  :;  i:  :;  ª              ÇT;  S?  :;  S?  º                z;  /?  r;  /?  æ                Å?  Ÿ?  j?  Ÿ?  ◊               Î?  @  Ÿ?  @  ÿ   	           @  RB  @  RB  Ÿ   
+            w@  …@  o@  …@  €   -            ¶A  ≈A  ûA  ≈A  ›   4            ıA  5B  ÌA  5B  ›   É            gB  vD  RB  vD  ﬁ               ãD  ÓD  vD  ÓD  Â              E  ¡G  ÓD  ¡G  Á               ◊G  UK  ¡G  UK  Û              nK  L  UK  L  ˝              ,L  %M  L  %M  ˇ              OM  ŒP  5M  ŒP                ÍP  pQ  ŒP  pQ  	              ãQ  ~R  pQ  ~R  
+               ëR  ñS  ~R  ñS    
+           ∞S  ÆT  ñS  ÆT                 ¡T  NU  ÆT  NU    
+           hU  =V  NU  =V               YV  ÎV  =V  ÎV                 ÂV  ÈV  ›V  ÈV    Ö             W  úW  ÎV  úW                ÆW  gX  úW  gX    	          }X  }Y  gX  }Y  !               æX  ¬X  ∂X  ¬X  "  :           ìY  *[  }Y  *[  %               ‘Y  ÿY  ÃY  ÿY  &  :            F[  Ö\  *[  Ö\  +             û\  j_  Ö\  j_  2              |_  ü`  j_  ü`  ;  	            µ`  æa  ü`  æa  =             „a  db  Àa  db  @              |b  ‡f  db  ‡f  A              ˆf  üh  ‡f  üh  O             Õh  €j  ∑h  €j  V            j  `k  €j  `k  \              :k  Yk  2k  Yk  \  V             rk  úk  `k  úk  ]  	           5°›ˇ‡&<ì∆$"™Ù      ffFø#gÔ=û   j    O^partitionKey=%28http%2C10.233.13.38%2C8080%29,:http://10.233.13.38:8080/?file=functions.js&version=4.8.1 necko:classified 1 strongly-framed 0 request-method GET response-head HTTP/1.1 200 OK
+Host: 10.233.13.38:8080
+Date: Thu, 04 Apr 2024 02:02:06 GMT
+X-Powered-By: PHP/7.4.33
+Expires: Fri, 04 Apr 2025 02:02:06 GMT
+Last-Modified: Thu, 04 Apr 2024 02:02:06 GMT
+Cache-Control: immutable
+Content-Type: text/javascript; charset=utf-8
+ original-response-headers Host: 10.233.13.38:8080
+Date: Thu, 04 Apr 2024 02:02:06 GMT
+Connection: close
+X-Powered-By: PHP/7.4.33
+Expires: Fri, 04 Apr 2025 02:02:06 GMT
+Last-Modified: Thu, 04 Apr 2024 02:02:06 GMT
+Cache-Control: immutable
+Content-Type: text/javascript; charset=utf-8
+ ctid 2 uncompressed-len 0 net-response-time-onstart 153 net-response-time-onstop 153 alt-data 1;27548,javascript/moz-script-bytecode-20230804095237-8l alt-data-from-child 1  ÂÄ

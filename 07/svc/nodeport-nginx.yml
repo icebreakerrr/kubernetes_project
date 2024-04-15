@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nodeport-service
+spec:
+  type: NodePort 
+  clusterIP: 10.233.10.10 #생략가능, vip
+  selector:
+    app: webui
+  ports:
+  - port: 80 # vip쪽 포트
+    targetPort: 80 # 레이블 포드 쪽의 컨테이너 포트와 매칭
+    nodePort: 30200 # 노드 포트

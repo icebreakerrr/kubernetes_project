@@ -1,0 +1,13 @@
+kind: Service 
+apiVersion: v1 
+metadata:
+  name: loadbalancer-service
+spec:
+  type: LoadBalancer
+  # clusterIP: 10.233.10.10  #자동할당해야 충돌이 안남.
+  selector:
+    app: webui
+  ports:
+  - port: 80
+    targetPort: 80 # 해당 레이블 노드로 넣음
+    # nodePort: 30200

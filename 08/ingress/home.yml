@@ -1,0 +1,42 @@
+--- 
+kind: Service 
+apiVersion: v1
+metadata:
+  name: home-service
+spec: # 서비스 연결방식 지정
+  # type: ClusterIP 
+  # ClusterIP: 10.233.10.10
+  selector:
+    name: home
+  ports:
+  - port: 80
+    targetPort: 80 #배포쪽 컨테이너 포트와 매칭됨
+    # nodePort: 30200
+    # 타입쪽은 대문자 내부포트쪽은 소문자 시작
+
+# 내부서비스일때 에는 type을 clusterip로 지정
+
+
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: home-deploy
+spec: 
+  replicas: 1
+  selector:
+    matchLabels: 
+      name: home
+  template: 
+    metadata:
+      name: home-pod
+      labels: 
+        name: home 
+    spec: 
+      containers:
+      - name: home-container
+        image: httpd
+        ports:
+        - containerPort: 80

@@ -1,0 +1,100 @@
+# 서비스, foo, bar 이번엔 한번에 만들어보자.
+# 인그레스만 별도로 띄울 예정
+
+---
+kind: Deployment 
+apiVersion: apps/v1 
+metadata:
+  name: foo-deploy
+spec:
+  replicas: 2
+  selector: 
+    matchLabels:
+      app: foo-app
+  template: # 레플리카 부족한 상황 오면 파드 템플릿 보고 띄움
+    metadata: 
+      name: foo-pod
+      labels: 
+        app: foo-app
+    spec: 
+      containers:
+      - name: foo-container
+        image: whatwant/node-web:2.0 
+        ports: 
+        - containerPort: 8080
+
+---
+kind: Service 
+apiVersion: v1
+metadata:   
+   name: foo-svc 
+spec: #서비스 내용
+  #type: ClusterIP
+  #clusterIP: 10.233.10.10
+  selector:
+    app: foo-app
+  ports: #포트는 이거 그림보고 확인 or 예제
+    - port: 80   #서비스의 80포트
+      targetPort: 8080 # 타겟 포드쪽 8080 포트
+
+---
+kind: Deployment 
+apiVersion: apps/v1 
+metadata:
+  name: bar-deploy
+spec:
+  replicas: 2
+  selector: 
+    matchLabels:
+      app: bar-app
+  template: # 레플리카 부족시 파드 템플릿 보고 띄움
+    metadata:
+      name: bar-pod
+      labels: 
+        app: bar-app
+    spec: 
+      containers:
+      - name: bar-container
+        image: whatwant/node-web:2.0 
+        ports: 
+        - containerPort: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: bar-svc
+spec:
+  selector:
+    app: bar-app
+  ports:
+  - port: 80 #그림상 80 내부서비스 포트로나옴
+    targetPort: 8080
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: name-virtual-host-ingress
+spec:
+  ingressClassName: nginx # 꼭 집어넣기. 안집어넣으면 할당 못받음
+  rules:
+  - host: foo.bar.com #어떤 ip인지 모름 현재. 인그레스 쪽에 할당받은 ip 사용할 것
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: foo-svc
+            port:
+              number: 80
+  - host: bar.foo.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: bar-svc #서비스쪽 메타데이터의 이름 확인
+            port:
+              number: 80

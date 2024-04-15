@@ -1,0 +1,45 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:  
+      app: web
+      version: green
+  template:
+    metadata:
+      labels:
+        app: web
+        version: green   
+    spec: # 파드 내부 컨테이너 동작
+      containers:
+      - name: green-container
+        image: whatwant/node-web:3.0
+        ports:
+          - containerPort: 8080
+---  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---

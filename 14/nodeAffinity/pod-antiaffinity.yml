@@ -1,0 +1,30 @@
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: frontend
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: main
+        image: busybox
+        args: 
+        - sleep
+        - 1d
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: backend #위와 다르게 라벨이 다르므로 다른 노드에 배치됨
+            topologyKey: kubernetes.io/hostname
+
+

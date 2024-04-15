@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: label-pod
+  labels:
+    name: mainui
+    rel: stable
+spec:
+  containers:
+  - image: nginx:1.14
+    name: label-container
+    ports:
+    - containerPort: 80
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+

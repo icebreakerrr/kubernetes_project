@@ -1,0 +1,5 @@
+https:www.youtube.com:443:.:^partitionKey=%28https%2Credhat.com%29:3	0	19810	https:www.youtube.com:443:www.youtube.com:443::n:1714205670:h3:y:1711613657:n:^partitionKey=%28https%2Credhat.com%29:|n:y:
+https:safebrowsing.googleapis.com:443:.:^firstPartyDomain=safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla:3	0	19817	https:safebrowsing.googleapis.com:443:safebrowsing.googleapis.com:443::n:1714801427:h3:y:1712196000:n:^firstPartyDomain=safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla:|n:y:
+https:www.gstatic.com:443:.:^partitionKey=%28https%2Cgoogle.com%29:3	0	19817	https:www.gstatic.com:443:www.gstatic.com:443::n:1714788120:h3:y:1712196000:n:^partitionKey=%28https%2Cgoogle.com%29:|n:y:
+https:www.google.com:443:.:^partitionKey=%28https%2Cgoogle.com%29:3	0	19817	https:www.google.com:443:www.google.com:443::n:1714788121:h3:y:1712196000:n:^partitionKey=%28https%2Cgoogle.com%29:|n:y:
+https:fonts.gstatic.com:443:.:^partitionKey=%28https%2Cgoogle.com%29:3	0	19817	https:fonts.gstatic.com:443:fonts.gstatic.com:443::n:1714788120:h3:y:1712196000:n:^partitionKey=%28https%2Cgoogle.com%29:|n:y:

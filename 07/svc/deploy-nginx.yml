@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: webui #디플로이먼트 이름
+spec: #몇개 어디로 배포
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webui
+  template: #파드내용
+    metadata:
+      name: nginx-pod
+      labels: 
+        app: webui
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.14
+        ports:
+        - containerPort: 80

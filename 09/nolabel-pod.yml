@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nolabel-pod
+spec:
+  containers:
+  - image: nginx:1.14
+    name: nolabel-container
+    ports:
+    - containerPort: 80
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+

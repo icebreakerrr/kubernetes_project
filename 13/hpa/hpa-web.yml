@@ -1,0 +1,21 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-web
+spec: 
+  maxReplicas: 10 #4.앞단에서 디플로이 정책 개수를 이게 조절
+  minReplicas: 1 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deploy-web
+  targetCPUUtilizationPercentage: 50
+  # metrics: # 1.메트릭 정보먼저 체크
+  # - type: Resource
+  #   resource:
+  #     name: cpu
+  #     target:
+  #       type: Utilization #2. 이용률 타입
+  #       averageUtilization: 50 #3. 50퍼이상일때
+
+

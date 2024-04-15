@@ -1,0 +1,45 @@
+---
+kind: Deployment 
+apiVersion: apps/v1
+metadata: 
+  name: nfs-web
+spec:
+  replicas: 3
+  selector: 
+    matchLabels:
+      role: web-frontend
+  template: 
+    metadata: 
+      name: nfs-web-pod
+      labels:
+        role: web-frontend
+    spec: 
+      containers:
+      - name: nfs-web-container
+        image: nginx:1.14
+        ports:
+        - containerPort: 80
+        # 서비스 하려면 웹 소스 코드 필요
+        # 외부 nfs 볼륨으로부터 가져오기
+        volumeMounts:
+          - name: nfs
+            mountPath: "/usr/share/nginx/html" #여기에 index file 존재
+      volumes:
+      - name: nfs
+        nfs: 
+          server: nfs-server # 재기동시 서비스나 파드들은 계속 ip가 변함, 서비스의 이름을 체크
+          path: "/exports"
+---
+kind: Service
+apiVersion: v1
+metadata: 
+  name: nfs-web
+spec:
+  # type: ClusterIP
+  # clusterIP: 10.233.10.20
+  selector:
+    role: web-frontend
+  ports:
+  - name: web-port
+    port: 80
+    targetPort: 80
